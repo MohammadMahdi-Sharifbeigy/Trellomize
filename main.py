@@ -1,4 +1,5 @@
 import json
+import os
 
 import bcrypt
 from rich.console import Console
@@ -7,8 +8,23 @@ from rich.theme import Theme
 
 from manager import UserManager
 
-theme = Theme({"info": "bold blue", "warning": "bold yellow", "danger": "bold red", "success": "bold green"})
+theme = Theme(
+    {
+        "info": "bold blue",
+        "warning": "bold yellow",
+        "danger": "bold red",
+        "success": "bold green",
+    }
+)
 console = Console(theme=theme)
+
+
+def clear_screen():
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
 
 def login(username, password):
     with open("users.json") as f:
@@ -23,18 +39,68 @@ def login(username, password):
         else:
             return False
 
+
+def main_menu(is_admin=False):
+    clear_screen()
+    console.print("Main Menu", style="bold blue")
+    menu_options = {
+        "1": "Project List",
+        "2": "Create New Project",
+        "3": "Profile Settings",
+        "4": "Board",
+        "0": "Log Out",
+    }
+
+    if is_admin:
+        menu_options["5"] = "Admin Settings"
+
+    while True:
+        for key, value in menu_options.items():
+            console.print(f"[{key}] {value}")
+
+        choice = Prompt.ask("Select an option", choices=menu_options.keys())
+
+        clear_screen()
+
+        if choice == "1":
+            # Function to display the project list
+            console.print("Displaying Project List...")
+        elif choice == "2":
+            # Function to create a new project
+            console.print("Creating a New Project...")
+        elif choice == "3":
+            # Function to modify profile settings
+            console.print("Accessing Profile Settings...")
+        elif choice == "4":
+            # Function to display the board with all tasks
+            console.print("Displaying Board...")
+        elif choice == "5" and is_admin:
+            # Function for admin settings
+            console.print("Accessing Admin Settings...")
+        elif choice == "0":
+            console.print("Logging Out...", style="bold red")
+            break
+        else:
+            console.print("Invalid option, please try again.", style="bold red")
+
+
 def main():
     console.print("Welcome to the Trellomize app!", style="bold green")
 
     while True:
-        user_choice = Prompt.ask("Choose an option", choices=["login", "register", "exit"], default="login")
+        user_choice = Prompt.ask(
+            "Choose an option", choices=["login", "register", "exit"], default="login"
+        )
 
         try:
             if user_choice == "login":
                 username = Prompt.ask("Enter your username")
                 password = Prompt.ask("Enter your password", password=True)
                 if login(username, password):
-                    console.print(":white_check_mark:Login successful!", style="success")
+                    console.print(
+                        ":white_check_mark:Login successful!", style="success"
+                    )
+                    is_admin = True
                     break
                 else:
                     console.print(":x:Login failed, please try again.", style="danger")
@@ -46,14 +112,17 @@ def main():
                     console.print("Registration successful!", style="bold blue")
                     break
                 else:
-                    console.print("Registration failed, please try again.", style="bold red")
+                    console.print(
+                        "Registration failed, please try again.", style="bold red"
+                    )
             elif user_choice == "exit":
                 console.print("Exiting the app. Goodbye!", style="bold magenta")
                 return
         except Exception as e:
             console.print(f"An error occurred: {e}", style="bold red")
 
-    # main_menu()
+    main_menu(is_admin)
+
 
 if __name__ == "__main__":
     main()
