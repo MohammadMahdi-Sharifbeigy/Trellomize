@@ -21,6 +21,16 @@ class CustomHelpFormatter(argparse.HelpFormatter):
     def _fill_text(self, text, width, indent):
         return ''.join([indent + line for line in text.splitlines(keepends=True)])
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 # Create main parser
 parser = argparse.ArgumentParser(description='Manage administrative tasks', formatter_class=CustomHelpFormatter)
 
@@ -32,7 +42,7 @@ admin_parser = subparsers.add_parser('create-user', help='Create a new administr
 
 admin_parser.add_argument('--username', required=True, help='Username for the administrator account')
 admin_parser.add_argument('--password', required=True, help='Password for the administrator account')
-admin_parser.add_argument('--is_active',action='store_true', const=True, default=True, help="Activate the administrator account")
+admin_parser.add_argument('--is_active', type=str2bool, nargs='?', const=True, default=True, help="Activate the administrator account")
 admin_parser.add_argument('--email', help='Email address for the administrator (Optional)')
 
 # --- Project Management ---
