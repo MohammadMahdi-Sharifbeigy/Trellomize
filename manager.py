@@ -175,12 +175,12 @@ class ProjectManager(DataManager):
         Creates a new project.
         """
         project_id = str(uuid.uuid4())
-        hashed_project_id = bcrypt.hashpw(project_id.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        if hashed_project_id in [project.get("id") for project in self.data.get("projects", [])]:
-            raise ValueError(f"Project with ID '{hashed_project_id}' already exists!")
+        # hashed_project_id = bcrypt.hashpw(project_id.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        # if hashed_project_id in [project.get("id") for project in self.data.get("projects", [])]:
+        #     raise ValueError(f"Project with ID '{hashed_project_id}' already exists!")
         
         project = {
-            "id": hashed_project_id,
+            "id": project_id,
             "title": title,
             "start_date": datetime.strptime(start_date, '%d/%m/%Y').strftime('%Y-%m-%d'),
             "members": [],
@@ -188,12 +188,12 @@ class ProjectManager(DataManager):
         }
         self.data.setdefault("projects", []).append(project)
         self._save_data(self.data, self.data_filename)
-        print(f"[green]Project created with ID:{hashed_project_id}[/]")
+        print(f"[green]Project created with ID:{project_id}[/]")
         return project
 
-    def get_project_by_hashed_id(self, hashed_project_id):
+    def get_project_by_hashed_id(self, project_id):
         for project in self.data.get("projects", []):
-            if project["id"] == hashed_project_id:
+            if project["id"] == project_id:
                 return project
         return None
     
