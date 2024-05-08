@@ -78,6 +78,16 @@ member_parser = subparsers.add_parser('add-member')
 member_parser.add_argument('--project_id', help='Project ID', required=True)
 member_parser.add_argument('--username', help='Username', required=True)
 
+member_parser = subparsers.add_parser('remove-member-from-project')
+member_parser.add_argument('--project_id', help='Project ID', required=True)
+member_parser.add_argument('--username', help='Username', required=True)
+
+task_parser = subparsers.add_parser('remove-member-from-task')
+task_parser.add_argument('--project_id', help='Project ID', required=True)
+task_parser.add_argument('--task_id', help='Task ID', required=True)
+task_parser.add_argument('--username', help='Username', required=True)
+
+
 # --- Data Handling ---
 def _save_data(data):
     with open(DATA_FILE, "w") as f:
@@ -339,6 +349,48 @@ def assign_member(project_id, task_id, username):
     if not task_found:
         print(f"[bold red]Error: Task with ID '{task_id}' not found in project '{project_id}'.[/]")
 
+def remove_member_from_project(project_id, username):
+    project = None
+    for p in data["projects"]:
+        if p["id"] == project_id:
+            project = p
+            break
+
+    if not project:
+        print(f"[bold red]Error: Project '{project_id}' not found![/]")
+        return None
+
+    if username not in project["members"]:
+        print(f"[bold red]Error: User '{username}' is not a member of the project![/]")
+        return None
+
+    project["members"].remove(username)
+    print(f"[green]User '{username}' successfully removed from the project![/]")
+    _save_data(data)
+
+def remove_member_from_task(project_id, task_id, username):
+    project = None
+    for p in data["projects"]:
+        if p["id"] == project_id:
+            project = p
+            break
+
+    if not project:
+        print(f"[bold red]Error: Project '{project_id}' not found![/]")
+        return None
+
+    for task_list in project["tasks"].values():
+        for task in task_list:
+            if task["task_id"] == task_id:
+                if username not in task["assignees"]:
+                    print(f"[bold red]Error: User '{username}' is not assigned to this task![/]")
+                    return None
+                task["assignees"].remove(username)
+                print(f"[green]User '{username}' successfully removed from task '{task['title']}![/]")
+                _save_data(data)
+                return
+
+    print(f"[bold red]Error: Task with ID '{task_id}' not found in project '{project_id}'.[/]")
 
 if __name__ == "__main__":
     # Load data from the JSON file
@@ -354,6 +406,10 @@ if __name__ == "__main__":
         create_project(args.project_id, args.title, args.start_date)
     elif args.command == 'add-member':
         add_member(args.project_id, args.username)
+    elif args.command == 'remove-member-from-project':
+        remove_member_from_project(args.project_id, args.username)
+    elif args.command == 'remove-member-from-task':
+        remove_member_from_task(args.project_id, args.task_id, args.username)
     elif args.command == 'add-task':
         add_task(args.project_id, args.task_id, args.title, args.description, args.duration, args.priority, args.status)
     elif args.command == 'delete-task':
