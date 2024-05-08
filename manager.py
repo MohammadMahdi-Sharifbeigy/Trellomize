@@ -360,7 +360,7 @@ class TaskManager(DataManager):
 
 if __name__ == "__main__":
     # Create instances of the classes
-    Data_manager = DataManager()
+    data_manager = DataManager()
     user_manager = UserManager()
     project_manager = ProjectManager()
     task_manager = TaskManager()
