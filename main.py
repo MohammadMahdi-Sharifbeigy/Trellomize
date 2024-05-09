@@ -41,12 +41,12 @@ def login(username, password):
             password.encode("utf-8"), user["password"].encode("utf-8")
         )
         if user["username"] == username and password:
-            return True, user["is_admin"]
+            return True, user
         else:
             return False, False
 
 
-def main_menu(is_admin=False):
+def main_menu(is_admin=False, current_user=None):
     clear_screen()
     console.print("Main Menu", style="bold blue")
     menu_options = {
@@ -73,8 +73,7 @@ def main_menu(is_admin=False):
         elif choice == "2":
             create_new_project()
         elif choice == "3":
-            # Function to modify profile settings
-            console.print("Accessing Profile Settings...")
+            profile_settings(current_user)
         elif choice == "4":
             # Function to display the board with all tasks
             console.print("Displaying Board...")
@@ -114,6 +113,43 @@ def create_new_project():
         console.print(f"[red]Error creating project: {e}[/]")
 
 
+def profile_settings(username):
+    user = user_manager.get_user(username)
+    if not user:
+        console.print("[red]User not found![/]")
+        return
+
+    console.print("[yellow]Edit your profile[/]")
+    fields = {"1": "password", "2": "email"}
+    choices = {key: f"Edit {value}" for key, value in fields.items()}
+    choices["3"] = "Go back"
+
+    while True:
+        for key, value in choices.items():
+            console.print(f"[{key}] {value}")
+
+        choice = Prompt.ask("Select an option", choices=list(choices.keys()))
+        if choice == "3":
+            break
+
+        field = fields[choice]
+        new_value = Prompt.ask(f"Enter new {field}")
+
+        if field == "password":
+            new_value = bcrypt.hashpw(
+                new_value.encode("utf-8"), bcrypt.gensalt()
+            ).decode("utf-8")
+
+        updates = {field: new_value}
+        try:
+            user_manager.update_user(username, updates)
+        except Exception as e:
+            console.print(f"[red]Error updating user: {e}[/]")
+            continue
+
+        console.print(f"[green]{field} updated successfully![/]")
+
+
 def main():
     console.print("Welcome to the Trellomize app!", style="bold green")
 
@@ -126,7 +162,8 @@ def main():
             if user_choice == "login":
                 username = Prompt.ask("Enter your username")
                 password = Prompt.ask("Enter your password", password=True)
-                login_result, is_admin = login(username, password)
+                login_result, user = login(username, password)
+                is_admin = user["is_admin"] if user else False
                 if login_result:
                     console.print(
                         ":white_check_mark:Login successful!", style="success"
@@ -150,7 +187,7 @@ def main():
         except Exception as e:
             console.print(f"An error occurred: {e}", style="bold red")
 
-    main_menu(is_admin)
+    main_menu(is_admin, user["username"])
 
 
 if __name__ == "__main__":

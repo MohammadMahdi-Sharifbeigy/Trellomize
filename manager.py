@@ -243,6 +243,32 @@ class UserManager(DataManager):
             )
         return user
 
+    def get_user(self, username):
+        """
+        Retrieve user data by username.
+        """
+        data = self._load_data(self.user_filename)
+        for user in data.get("users", []):
+            if user["username"] == username:
+                return user
+        return None
+
+    def update_user(self, username, updates):
+        """
+        Update user data.
+        """
+        data = self._load_data(self.user_filename)
+        users = data.get("users", [])
+        for user in users:
+            if user["username"] == username:
+                user.update(updates)
+                break
+        else:
+            raise ValueError("User not found")
+
+        self._save_data(data, self.user_filename)
+        print(f"[green]User '{username}' updated successfully![/]")
+
 
 class ProjectManager(DataManager):
     """
