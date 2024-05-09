@@ -4,6 +4,7 @@ import os
 import bcrypt
 from rich.console import Console
 from rich.prompt import Prompt
+from rich.table import Table
 from rich.theme import Theme
 
 from manager import ProjectManager, UserManager
@@ -68,8 +69,7 @@ def main_menu(is_admin=False):
         clear_screen()
 
         if choice == "1":
-            # Function to display the project list
-            console.print("Displaying Project List...")
+            display_project_list()
         elif choice == "2":
             create_new_project()
         elif choice == "3":
@@ -86,6 +86,20 @@ def main_menu(is_admin=False):
             break
         else:
             console.print("Invalid option, please try again.", style="bold red")
+
+
+def display_project_list():
+    projects = project_manager.list_projects()
+    if projects:
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("ID", style="dim")
+        table.add_column("Title")
+        table.add_column("Start Date", justify="right")
+        for project in projects:
+            table.add_row(project["id"], project["title"], project["start_date"])
+        console.print(table)
+    else:
+        console.print("[bold red]No projects available![/]")
 
 
 def create_new_project():
