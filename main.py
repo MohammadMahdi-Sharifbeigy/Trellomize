@@ -158,6 +158,9 @@ def main():
             "Choose an option", choices=["login", "register", "exit"], default="login"
         )
 
+        is_admin = False
+        user = None
+
         try:
             if user_choice == "login":
                 username = Prompt.ask("Enter your username")
@@ -187,7 +190,7 @@ def main():
         except Exception as e:
             console.print(f"An error occurred: {e}", style="bold red")
 
-    main_menu(is_admin, user["username"])
+    main_menu(is_admin, user["username"] if user else None)
 
 
 if __name__ == "__main__":
