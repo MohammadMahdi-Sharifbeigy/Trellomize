@@ -136,7 +136,7 @@ class UserManager(DataManager):
         self.user_filename = user_filename
         self._load_data(self.user_filename)
 
-    def create_user(self, username, password, is_active=True, email=None):
+    def create_user(self, username, password, is_active=True, email=None, is_admin=False):
         """
         Creates a new user account.
         """
@@ -152,7 +152,8 @@ class UserManager(DataManager):
             "username": username,
             "password": hashed_password.decode('utf-8'),
             "email": email,
-            "is_active": is_active
+            "is_active": is_active,
+            "is_admin": is_admin
         }
         users.append(user)
         data["users"] = users
@@ -378,7 +379,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.command == 'create-user':
-        user_manager.create_user(args.username, args.password, args.is_active, args.email)
+        user_manager.create_user(args.username, args.password, args.is_active, args.email, True)
     elif args.command == 'purge-data':
         data_manager.purge_data(input("[bold red]Are you sure you want to erase all data? (y/n): "))
     elif args.command == 'create-project':

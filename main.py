@@ -35,9 +35,9 @@ def login(username, password):
             password.encode("utf-8"), user["password"].encode("utf-8")
         )
         if user["username"] == username and password:
-            return True
+            return True, user["is_admin"]
         else:
-            return False
+            return False, False
 
 
 def main_menu(is_admin=False):
@@ -96,11 +96,11 @@ def main():
             if user_choice == "login":
                 username = Prompt.ask("Enter your username")
                 password = Prompt.ask("Enter your password", password=True)
-                if login(username, password):
+                login_result, is_admin = login(username, password)
+                if login_result:
                     console.print(
                         ":white_check_mark:Login successful!", style="success"
                     )
-                    is_admin = True
                     break
                 else:
                     console.print(":x:Login failed, please try again.", style="danger")
