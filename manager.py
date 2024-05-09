@@ -114,6 +114,7 @@ class DataManager:
             del data["tasks"]
         with open(filename, "w") as f:
             json.dump(data, f, indent=2)
+    
     def purge_data(self):
         """
         Deletes all user and project data.
@@ -189,7 +190,7 @@ class ProjectManager(DataManager):
         }
         self.data.setdefault("projects", []).append(project)
         self._save_data(self.data, self.data_filename)
-        print(f"[green]Project created with ID:{project_id}[/]")
+        # print(f"[green]Project created with ID:{project_id}[/]")
         return project
 
     def get_project_by_hashed_id(self, project_id):

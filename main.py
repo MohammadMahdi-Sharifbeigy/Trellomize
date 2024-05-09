@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.theme import Theme
 
-from manager import UserManager
+from manager import ProjectManager, UserManager
 
 theme = Theme(
     {
@@ -17,6 +17,8 @@ theme = Theme(
     }
 )
 console = Console(theme=theme)
+user_manager = UserManager()
+project_manager = ProjectManager()
 
 
 def clear_screen():
@@ -33,7 +35,7 @@ def login(username, password):
     for user in users:
         if not user["is_active"]:
             return False, False
-        
+
         password = bcrypt.checkpw(
             password.encode("utf-8"), user["password"].encode("utf-8")
         )
@@ -69,8 +71,7 @@ def main_menu(is_admin=False):
             # Function to display the project list
             console.print("Displaying Project List...")
         elif choice == "2":
-            # Function to create a new project
-            console.print("Creating a New Project...")
+            create_new_project()
         elif choice == "3":
             # Function to modify profile settings
             console.print("Accessing Profile Settings...")
@@ -85,6 +86,18 @@ def main_menu(is_admin=False):
             break
         else:
             console.print("Invalid option, please try again.", style="bold red")
+
+
+def create_new_project():
+    title = Prompt.ask("Enter the title of the new project")
+    start_date = Prompt.ask("Enter the start date of the project (dd/mm/yyyy)")
+    try:
+        project = project_manager.create_project(title, start_date)
+        console.print(
+            f"[green]New project created successfully with ID: {project['id']}[/]"
+        )
+    except Exception as e:
+        console.print(f"[red]Error creating project: {e}[/]")
 
 
 def main():
@@ -110,7 +123,6 @@ def main():
             elif user_choice == "register":
                 username = Prompt.ask("Choose a username")
                 password = Prompt.ask("Choose a password", password=True)
-                user_manager = UserManager()
                 if user_manager.create_user(username=username, password=password):
                     console.print("Registration successful!", style="bold blue")
                     break
