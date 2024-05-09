@@ -31,6 +31,9 @@ def login(username, password):
         users = json.load(f)["users"]
 
     for user in users:
+        if not user["is_active"]:
+            return False, False
+        
         password = bcrypt.checkpw(
             password.encode("utf-8"), user["password"].encode("utf-8")
         )
