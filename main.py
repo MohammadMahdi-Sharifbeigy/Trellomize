@@ -220,7 +220,7 @@ def display_project_board(project_id):
 
     # Provide options for interacting with the board
     while True:
-        user_input = Prompt.ask("Choose an action: (a)dd task, (m)ove task, (d)elete task, (b)ack",choices=["a", "m", "d", "b"],)
+        user_input = Prompt.ask("Choose an action: (a)dd task, (m)ove task, (d)elete task, (as)sign member, (r)emove assignee, (b)ack",choices=["a", "m", "d", "as", "r", "b"],)
 
         if user_input == "a":
             add_task_to_board(project_id)
@@ -228,6 +228,20 @@ def display_project_board(project_id):
             move_task_on_board(project_id)
         elif user_input == "d":
             delete_task_from_board(project_id)
+        elif user_input == "as":
+            if any(project["tasks"].values()) and any(project["members"]):
+                task_id = Prompt.ask("Enter task ID to assign member to:")
+                username = Prompt.ask("Enter username of member to assign:")
+                task_manager.assign_member(project_id, task_id, username)
+            else:
+                console.print(f"[bold red]User could not assigne to a task![/]")
+        elif user_input == "r":
+            if any(project["tasks"].values()) and any(project["members"]):
+                task_id = Prompt.ask("Enter task ID to remove assignee from:")
+                username = Prompt.ask("Enter username of assignee to remove:")
+                task_manager.remove_assignee_from_task(project_id, task_id, username)
+            else:
+                console.print(f"[bold red]User could not remove to from a task![/]")
         elif user_input == "b":
             break
 
