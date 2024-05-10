@@ -120,17 +120,6 @@ def main_menu(is_admin=False, current_user=None):
         else:
             console.print("Invalid option, please try again.", style="bold red")
 
-# def get_user_input(prompt, allowed_chars=None):
-#     while True:
-#         user_input = input(f"{prompt} ").strip()
-
-#         if allowed_chars and user_input.upper() not in allowed_chars:
-#             console.print(
-#                 f"[bold red]Invalid input. Please enter one of: {', '.join(allowed_chars)}[/]"
-#             )
-#         else:
-#             return user_input
-
 def display_project_list():
     projects = project_manager.list_projects()
     if projects:
@@ -217,12 +206,11 @@ def display_project_board(project_id):
 
     # Add tasks to their respective tables
     for status, tasks in project["tasks"].items():
-        for task_id, task in enumerate(tasks):
-            if task["status"] == status:
-                due_date = datetime.strptime(
-                    task["end_date"], "%Y-%m-%d").strftime("%d/%m/%Y")
-                assignees = ", ".join(task.get("assignees", []))
-                task_tables[status].add_row(str(task_id), task["title"], assignees, task["priority"], due_date)
+        for task in tasks:
+            due_date = datetime.strptime(
+                task["end_date"], "%Y-%m-%d").strftime("%d/%m/%Y")
+            assignees = ", ".join(task.get("assignees", []))
+            task_tables[status].add_row(task['task_id'], task["title"], assignees, task["priority"], due_date)
 
 
     # Print the task tables
@@ -253,50 +241,38 @@ def add_task_to_board(project_id):
     status = "TODO"  # Default status for new tasks
 
     # Create and add the task using the task manager
-    task_manager.add_task(
-        project_id, title, description, duration, priority, status
-    )
-
+    task_manager.add_task(project_id, title, description, duration, priority, status)
     # Update the project board display
     display_project_board(project_id)
 
 
 def move_task_on_board(project_id):
-    # Display task IDs and titles for selection
     task_table = Table(title="Available Tasks", style="bold magenta")
     task_table.add_column("ID", style="dim")
     task_table.add_column("Title", style="italic")
-    console.print(task_table)
-    console.print("")
 
     for status, tasks in project_manager.get_project(project_id)["tasks"].items():
         for task_id, task in enumerate(tasks):
-            task_table.add_row(str(task_id), task["title"])
+            task_table.add_row(task['task_id'], task["title"])
     console.print(task_table)
     console.print("")
 
-    # Get task ID and new status from the user
     task_id = Prompt.ask("Enter task ID to move:")
     new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED):",choices=["TODO", "DOING", "DONE", "ARCHIVED"],)
 
-    # Move the task using the task manager
     task_manager.move_task(project_id, task_id, new_status)
 
-    # Update the project board display
     display_project_board(project_id)
 
 
 def delete_task_from_board(project_id):
-    # Display task IDs and titles for selection
     task_table = Table(title="Available Tasks", style="bold magenta")
-    task_table.add_column("ID", style="dim")
-    task_table.add_column("Title", style="italic")
-    console.print(task_table)
-    console.print("")
 
-    for task_id, task in project_manager.get_project(project_id)["tasks"].items():
-        task_table.add_row(task_id, task["title"])
+    for status, tasks in project_manager.get_project(project_id)["tasks"].items():
+        for task_id, task in enumerate(tasks):
+            task_table.add_row(task['task_id'], task["title"])
     console.print(task_table)
+
     console.print("")
 
     task_id = Prompt.ask("Enter task ID to delete:")
@@ -305,7 +281,6 @@ def delete_task_from_board(project_id):
     except ValueError as e:
         console.print(f"[bold red]{e}[/]")
     else:
-        # Update the project board display
         display_project_board(project_id)
 
 def main():

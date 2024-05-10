@@ -302,24 +302,13 @@ class ProjectManager(DataManager):
 
 
 class TaskManager(DataManager):
-    """
-    A class for managing task data.
-    """
     def get_project(self, project_id):
-        """
-        Retrieves a project by its ID.
-        """
         for project in self.data.get("projects", []):
             if project["id"] == project_id:
                 return project
         return None
 
-    def add_task(
-        self, project_id, title, description, duration, priority, status="TODO"
-    ):
-        """
-        Adds a new task to a project.
-        """
+    def add_task(self, project_id, title, description, duration, priority, status="TODO"):
         project = self.get_project(project_id)
         if not project:
             raise ValueError(f"Project with hashed ID '{project_id}' not found!")
@@ -347,9 +336,6 @@ class TaskManager(DataManager):
         return task
 
     def delete_task(self, project_id, task_id):
-        """
-        Deletes a task from a project.
-        """
         project = self.get_project(project_id)
         if not project:
             raise ValueError(f"Project with ID '{project_id}' not found!")
@@ -365,9 +351,6 @@ class TaskManager(DataManager):
         )
 
     def move_task(self, project_id, task_id, new_status):
-        """
-        Moves a task to a different status within a project.
-        """
         project = self.get_project(project_id)
         if not project:
             raise ValueError(f"Project with ID '{project_id}' not found!")
@@ -384,9 +367,6 @@ class TaskManager(DataManager):
         )
 
     def assign_member(self, project_id, task_id, username):
-        """
-        Assigns a user to a task.
-        """
         project = self.get_project(project_id)
         if not project:
             raise ValueError("Project not found!")
@@ -409,9 +389,6 @@ class TaskManager(DataManager):
             raise ValueError("Task not found in project!")
 
     def remove_assignee_from_task(self, project_id, task_id, username):
-        """
-        Removes a user from a task.
-        """
         project = self.get_project(project_id)
         if not project:
             raise ValueError("Project not found!")
