@@ -273,7 +273,7 @@ class ProjectManager(DataManager):
             if project["title"] == title:
                 return project
         return None
-    
+
     def list_projects(self):
         """
         Retrieves and returns a list of all projects.
@@ -325,18 +325,16 @@ class ProjectManager(DataManager):
 class TaskManager(DataManager):
     def get_project(self, project_title):
         for project in self.data.get("projects", []):
-            if project["title"] == title:
+            if project["title"] == project_title:
                 return project
         return None
-
 
     def add_task(self, project_title, task_title, description, duration, priority, status="TODO"):
         project = self.get_project(project_title)
         if not project:
             raise ValueError(f"Project with TITLE '{project_title}' not found!")
-        # task_id = str(uuid.uuid4())
+        
         task = {
-            # "task_id": task_id,
             "title": task_title,
             "description": description,
             "start_date": date.today().isoformat(),
@@ -347,58 +345,50 @@ class TaskManager(DataManager):
             "assignees": [],
         }
 
-
-        # Ensure the tasks dictionary is initialized
         if "tasks" not in project or not isinstance(project["tasks"], dict):
             project["tasks"] = {"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []}
 
-
         project["tasks"][status].append(task)
         self._save_data(self.data, self.data_filename)
-        print(f"Task created with TITLE: {taske_title}")
+        print(f"Task created with TITLE: {task_title}")
         return task
-
 
     def delete_task(self, project_title, task_title):
         project = self.get_project(project_title)
         if not project:
-            raise ValueError(f"Project with ID '{project_title}' not found!")
-
-
-        for task_list in project["tasks"].values():
-            for task in task_list:
-                if task["title"] == task_title:
-                    task_list.remove(task)
-                    self._save_data(self.data, self.data_filename)
-                    return
-        raise ValueError(
-            f"Task with TILTE '{task_title}' not found in project '{project_title}'."
-        )
-
-
-    def move_task(self, project_title, task_title, new_status):
-        project = self.get_project(project_title)
-        if not project:
             raise ValueError(f"Project with TITLE '{project_title}' not found!")
 
-
         for task_list in project["tasks"].values():
             for task in task_list:
                 if task["title"] == task_title:
                     task_list.remove(task)
-                    project["tasks"].setdefault(new_status, []).append(task)
                     self._save_data(self.data, self.data_filename)
                     return
         raise ValueError(
             f"Task with TITLE '{task_title}' not found in project '{project_title}'."
         )
 
+    def move_task(self, project_title, task_title, new_status):
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError(f"Project with TITLE '{project_title}' not found!")
+
+        for status, task_list in project["tasks"].items():
+            for task in task_list:
+                if task["title"] == task_title:
+                    task["status"] = new_status
+                    task_list.remove(task)
+                    project["tasks"].setdefault(new_status, []).append(task)
+                    self._save_data(self.data, self.data_filename)
+                    return
+
+        raise ValueError(f"Task with TITLE '{task_title}' not found in project '{project_title}'.")
+
 
     def assign_member(self, project_title, task_title, username):
         project = self.get_project(project_title)
         if not project:
             raise ValueError("Project not found!")
-
 
         task_found = False
         for task_list in project["tasks"].values():
@@ -414,16 +404,13 @@ class TaskManager(DataManager):
                     )
                     return
 
-
         if not task_found:
             raise ValueError("Task not found in project!")
-
 
     def remove_assignee_from_task(self, project_title, task_title, username):
         project = self.get_project(project_title)
         if not project:
             raise ValueError("Project not found!")
-
 
         for task_list in project["tasks"].values():
             for task in task_list:
@@ -437,10 +424,17 @@ class TaskManager(DataManager):
                     self._save_data(self.data, self.data_filename)
                     return
 
-
         raise ValueError("Task not found in project!")
 
+    def get_tasks_for_project(self, project_title):
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError(f"Project with TITLE '{project_title}' not found!")
 
+        tasks = []
+        for task_list in project["tasks"].values():
+            tasks.extend(task_list)
+        return tasks
 
 if __name__ == "__main__":
     data_manager = DataManager()
