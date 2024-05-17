@@ -59,7 +59,7 @@ def display_project_list(project_manager, current_user):
             project_title = Prompt.ask("Enter the project title, or press enter to go back")
             if project_title == "":
                 break
-            display_project(project_title, project_manager, task_manager)
+            display_project(project_title, project_manager, task_manager, current_user)
 
     else:
         console.print("No projects available!", style="warning")
@@ -110,7 +110,7 @@ def profile_settings(username):
 
         console.print(f"{field} updated successfully!", style="success")
 
-def display_project(project_title, project_manager, task_manager):
+def display_project(project_title, project_manager, task_manager, current_user):
     clear_screen()
     try:
         while True :
@@ -150,7 +150,7 @@ def display_project(project_title, project_manager, task_manager):
                         console.print("")
 
             except ValueError as e:
-                console.print(f"{e}")
+                console.print(f"{e}", style="danger")
                 
             menu_options = {
                 "1": "Add Task",
@@ -162,9 +162,13 @@ def display_project(project_title, project_manager, task_manager):
                 "7": "Assign Member",
                 "8": "Remove Assignee",
                 "9": "View Members",
-                "10": "Delete Project", # Only for project owner
-                "0": "Back",
+                "0": "Exit",
             }
+            if project_manager.is_project_owner(project_title, current_user):
+                menu_options.pop("0")
+                menu_options["10"] = "Delete Project"
+                menu_options["0"] = "Exit"
+            
             for key, value in menu_options.items():
                 console.print(f"[{key}] {value}")
             action = Prompt.ask("Select an option", choices=menu_options.keys())
@@ -393,6 +397,7 @@ def main():
     main_menu(is_admin, user["username"] if user else None)
 
 def main_menu(is_admin=False, current_user=None):
+    clear_screen()
     while True:
         console.print("Main Menu", style="info")
         menu_options = {
@@ -403,7 +408,10 @@ def main_menu(is_admin=False, current_user=None):
             "0": "Log Out",
         }
         if is_admin:
+            menu_options.pop("0")
             menu_options["5"] = "Admin Settings"
+            menu_options["0"] = "Log Out"
+            
         for key, value in menu_options.items():
             console.print(f"[{key}] {value}")
         choice = Prompt.ask("Select an option", choices=menu_options.keys())

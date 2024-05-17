@@ -259,11 +259,15 @@ class ProjectManager(DataManager):
         print(f"[green]Project created with title: {title}[/]")
         return project
 
-    def is_project_owner(self, project, username):
+    def is_project_owner(self, project_title, username):
         """
         Checks if the given user is the owner of the project.
         """
-        return project.get("owner") == username
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError("Project not found!")
+
+        return project["owner"] == username
 
     def get_project(self, title):
         """
