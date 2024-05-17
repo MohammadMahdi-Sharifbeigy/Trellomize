@@ -161,6 +161,8 @@ def display_project(project_title, project_manager, task_manager):
                 "6": "Remove Member",
                 "7": "Assign Member",
                 "8": "Remove Assignee",
+                "9": "View Members",
+                "10": "Delete Project", # Only for project owner
                 "0": "Back",
             }
             for key, value in menu_options.items():
@@ -278,6 +280,21 @@ def display_project(project_title, project_manager, task_manager):
                 except Exception as e:
                     console.print(f"An error occurred while removing the assignee: {e}", style="danger")
 
+            elif action == "9":
+                try:
+                    console.print("Members in the project:")
+                    for member in project_manager.get_project(project_title)["members"]:
+                        console.print(member)
+                except Exception as e:
+                    console.print(f"An error occurred while viewing the members: {e}", style="danger")
+            elif action == "10":
+                try:
+                    project_manager.delete_project(project_title)
+                    console.print(f"Project '{project_title}' deleted successfully!", style="success")
+                    break
+                except Exception as e:
+                    console.print(f"An error occurred while deleting the project: {e}", style="danger")
+                    
             elif action == "0":
                 break
 

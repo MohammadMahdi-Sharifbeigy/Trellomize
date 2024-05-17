@@ -327,6 +327,18 @@ class ProjectManager(DataManager):
 
         project["members"].remove(username)
         self._save_data(self.data, self.data_filename)
+    
+    def delete_project(self, project_title):
+        """
+        Deletes a project.
+        """
+        self.reload_data()
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError(f"Project with title '{project_title}' not found!")
+
+        self.data["projects"].remove(project)
+        self._save_data(self.data, self.data_filename)
 
 
 class TaskManager(DataManager):
