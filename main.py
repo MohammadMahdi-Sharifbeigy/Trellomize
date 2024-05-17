@@ -64,12 +64,14 @@ def display_project_list(project_manager, current_user):
     else:
         console.print("No projects available!", style="warning")
 
-def create_new_project():
-    project_title = Prompt.ask("Enter the title of the new project")
-    start_date = Prompt.ask("Enter the start date of the project (dd/mm/yyyy)")
+def create_new_project(current_user):
+    title = Prompt.ask("Enter the title of the new project")
+    start_date = Prompt.ask(
+        "Enter the start date of the project (dd/mm/yyyy)"
+    )
     try:
-        project = project_manager.create_project(project_title, start_date)
-        console.print(f"New project created successfully with ID: {project['id']}", style="success")
+        project = project_manager.create_project(title, start_date, current_user)
+        console.print(f"New project created successfully with Title: {project['title']}", style="success")
     except Exception as e:
         console.print(f"Error creating project: {e}", style="danger")
 
@@ -420,12 +422,7 @@ def main_menu(is_admin=False, current_user=None):
             if choice == "1":
                 display_project_list(project_manager, current_user)
             elif choice == "2":
-                title = Prompt.ask("Enter the title of the new project")
-                start_date = Prompt.ask(
-                    "Enter the start date of the project (dd/mm/yyyy)"
-                )
-                project = project_manager.create_project(title, start_date, current_user)
-                console.print(f"New project created successfully with Title: {project['title']}", style="success")
+                create_new_project(current_user)
             elif choice == "3":
                 profile_settings(current_user)
             elif choice == "4":
