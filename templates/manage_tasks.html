@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dark Mode Toggle</title>
     <link rel="stylesheet" href="\static\styles.css" />
+    <!-- Updated Font Awesome CDN link -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMt23cez/3paNdF+N8FkVSm7K4U5xFe5R6oRfrv"
+      crossorigin="anonymous"
+    />
   </head>
   <body>
     <div class="dark-mode-toggle">
@@ -14,236 +21,252 @@
       </label>
     </div>
 
-    <h1>{{ project_title }}</h1>
+    <div class="container">
+      <h1>{{ project_title }}</h1>
 
-    <h2>Create New Task</h2>
-    <form method="post">
-      <label for="task_title">Task Title:</label>
-      <input type="text" id="task_title" name="task_title" required />
-      <br />
-      <label for="description">Description:</label>
-      <textarea id="description" name="description" required></textarea>
-      <br />
-      <label for="duration">Duration (days):</label>
-      <input type="number" id="duration" name="duration" required />
-      <br />
-      <label for="priority">Priority:</label>
-      <select id="priority" name="priority" required>
-        <option value="Low">Low</option>
-        <option value="Medium">Medium</option>
-        <option value="High">High</option>
-        <option value="Critical">Critical</option>
-      </select>
-      <br />
-      <button type="submit">Create Task</button>
-    </form>
+      <h2>Create New Task</h2>
+      <form method="post">
+        <label for="task_title">Task Title:</label>
+        <input type="text" id="task_title" name="task_title" required />
+        <br />
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea>
+        <br />
+        <label for="duration">Duration (days):</label>
+        <input type="number" id="duration" name="duration" required />
+        <br />
+        <label for="priority">Priority:</label>
+        <select id="priority" name="priority" required>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+          <option value="Critical">Critical</option>
+        </select>
+        <br />
+        <button type="submit">Create Task</button>
+      </form>
 
-    <h2>Tasks</h2>
-    <div>
-      <h3>To Do</h3>
-      <table border="1">
-        <tr>
-          <th>Title</th>
-          <th>Description</th>
-          <th>Duration</th>
-          <th>Priority</th>
-          <th>Assignees</th>
-        </tr>
-        {% for task in tasks.TODO %}
-        <tr>
-          <td>{{ task.title }}</td>
-          <td>{{ task.description }}</td>
-          <td>{{ task.duration }}</td>
-          <td>{{ task.priority }}</td>
-          <td>
-            {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+      <h2>Tasks</h2>
+      <div>
+        <h3>To Do</h3>
+        <table border="1">
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Duration</th>
+            <th>Priority</th>
+            <th>Assignees</th>
+          </tr>
+          {% for task in tasks.TODO %}
+          <tr>
+            <td>{{ task.title }}</td>
+            <td>{{ task.description }}</td>
+            <td>{{ task.duration }}</td>
+            <td>{{ task.priority }}</td>
+            <td>
+              {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <div>
+        <h3>Doing</h3>
+        <table border="1">
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Duration</th>
+            <th>Priority</th>
+            <th>Assignees</th>
+          </tr>
+          {% for task in tasks.DOING %}
+          <tr>
+            <td>{{ task.title }}</td>
+            <td>{{ task.description }}</td>
+            <td>{{ task.duration }}</td>
+            <td>{{ task.priority }}</td>
+            <td>
+              {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <div>
+        <h3>Done</h3>
+        <table border="1">
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Duration</th>
+            <th>Priority</th>
+            <th>Assignees</th>
+          </tr>
+          {% for task in tasks.DONE %}
+          <tr>
+            <td>{{ task.title }}</td>
+            <td>{{ task.description }}</td>
+            <td>{{ task.duration }}</td>
+            <td>{{ task.priority }}</td>
+            <td>
+              {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <div>
+        <h3>Archived</h3>
+        <table border="1">
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Duration</th>
+            <th>Priority</th>
+            <th>Assignees</th>
+          </tr>
+          {% for task in tasks.ARCHIVED %}
+          <tr>
+            <td>{{ task.title }}</td>
+            <td>{{ task.description }}</td>
+            <td>{{ task.duration }}</td>
+            <td>{{ task.priority }}</td>
+            <td>
+              {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <h2>Move Task</h2>
+      <form method="post">
+        <label for="task_title_move">Task Title:</label>
+        <input
+          type="text"
+          id="task_title_move"
+          name="task_title_move"
+          required
+        />
+        <br />
+        <label for="new_status">New Status:</label>
+        <select id="new_status" name="new_status" required>
+          <option value="TODO">To Do</option>
+          <option value="DOING">Doing</option>
+          <option value="DONE">Done</option>
+          <option value="ARCHIVED">Archived</option>
+        </select>
+        <br />
+        <button type="submit">Move Task</button>
+      </form>
+
+      <h2>Delete Task</h2>
+      <form method="post">
+        <label for="task_title_delete">Task Title:</label>
+        <input
+          type="text"
+          id="task_title_delete"
+          name="task_title_delete"
+          required
+        />
+        <br />
+        <button type="submit">Delete Task</button>
+      </form>
+
+      <!-- Add Member form -->
+      <h2>Add Member to Project</h2>
+      <form method="post">
+        <label for="member_username">Member Username:</label>
+        <input
+          type="text"
+          id="member_username"
+          name="member_username"
+          required
+        />
+        <br />
+        <button type="submit">Add Member</button>
+      </form>
+
+      <!-- Remove Member form -->
+      <h2>Remove Member from Project</h2>
+      <form method="post">
+        <label for="remove_member_username">Member Username:</label>
+        <input
+          type="text"
+          id="remove_member_username"
+          name="remove_member_username"
+          required
+        />
+        <br />
+        <button type="submit">Remove Member</button>
+      </form>
+
+      <!-- Assign Member form -->
+      <h2>Assign Member to Task</h2>
+      <form method="post">
+        <label for="assign_task_title">Task Title:</label>
+        <input
+          type="text"
+          id="assign_task_title"
+          name="assign_task_title"
+          required
+        />
+        <br />
+        <label for="assignee_username">Assignee Username:</label>
+        <input
+          type="text"
+          id="assignee_username"
+          name="assignee_username"
+          required
+        />
+        <br />
+        <button type="submit">Assign Member</button>
+      </form>
+
+      <!-- Remove Assignee form -->
+      <h2>Remove Assignee from Task</h2>
+      <form method="post">
+        <label for="remove_assign_task_title">Task Title:</label>
+        <input
+          type="text"
+          id="remove_assign_task_title"
+          name="remove_assign_task_title"
+          required
+        />
+        <br />
+        <label for="remove_assignee_username">Assignee Username:</label>
+        <input
+          type="text"
+          id="remove_assignee_username"
+          name="remove_assignee_username"
+          required
+        />
+        <br />
+        <button type="submit">Remove Assignee</button>
+      </form>
+
+      <!-- View Members button -->
+      <h2>View Members</h2>
+      <form
+        method="post"
+        action="{{ url_for('manage_tasks', project_title=project_title) }}"
+      >
+        <button type="submit" name="view_members">View Members</button>
+      </form>
+
+      <!-- Back to Projects link -->
+      <a href="{{ url_for('projects') }}">Back to Projects</a>
     </div>
-
-    <div>
-      <h3>Doing</h3>
-      <table border="1">
-        <tr>
-          <th>Title</th>
-          <th>Description</th>
-          <th>Duration</th>
-          <th>Priority</th>
-          <th>Assignees</th>
-        </tr>
-        {% for task in tasks.DOING %}
-        <tr>
-          <td>{{ task.title }}</td>
-          <td>{{ task.description }}</td>
-          <td>{{ task.duration }}</td>
-          <td>{{ task.priority }}</td>
-          <td>
-            {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
-    </div>
-
-    <div>
-      <h3>Done</h3>
-      <table border="1">
-        <tr>
-          <th>Title</th>
-          <th>Description</th>
-          <th>Duration</th>
-          <th>Priority</th>
-          <th>Assignees</th>
-        </tr>
-        {% for task in tasks.DONE %}
-        <tr>
-          <td>{{ task.title }}</td>
-          <td>{{ task.description }}</td>
-          <td>{{ task.duration }}</td>
-          <td>{{ task.priority }}</td>
-          <td>
-            {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
-    </div>
-
-    <div>
-      <h3>Archived</h3>
-      <table border="1">
-        <tr>
-          <th>Title</th>
-          <th>Description</th>
-          <th>Duration</th>
-          <th>Priority</th>
-          <th>Assignees</th>
-        </tr>
-        {% for task in tasks.ARCHIVED %}
-        <tr>
-          <td>{{ task.title }}</td>
-          <td>{{ task.description }}</td>
-          <td>{{ task.duration }}</td>
-          <td>{{ task.priority }}</td>
-          <td>
-            {% for assignee in task.assignees %} {{ assignee }}, {% endfor %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
-    </div>
-
-    <h2>Move Task</h2>
-    <form method="post">
-      <label for="task_title_move">Task Title:</label>
-      <input type="text" id="task_title_move" name="task_title_move" required />
-      <br />
-      <label for="new_status">New Status:</label>
-      <select id="new_status" name="new_status" required>
-        <option value="TODO">To Do</option>
-        <option value="DOING">Doing</option>
-        <option value="DONE">Done</option>
-        <option value="ARCHIVED">Archived</option>
-      </select>
-      <br />
-      <button type="submit">Move Task</button>
-    </form>
-
-    <h2>Delete Task</h2>
-    <form method="post">
-      <label for="task_title_delete">Task Title:</label>
-      <input
-        type="text"
-        id="task_title_delete"
-        name="task_title_delete"
-        required
-      />
-      <br />
-      <button type="submit">Delete Task</button>
-    </form>
-
-    <a href="{{ url_for('projects') }}">Back to Projects</a>
-
-    <!-- Add Member form -->
-    <h2>Add Member to Project</h2>
-    <form method="post">
-      <label for="member_username">Member Username:</label>
-      <input type="text" id="member_username" name="member_username" required />
-      <br />
-      <button type="submit">Add Member</button>
-    </form>
-
-    <!-- Remove Member form -->
-    <h2>Remove Member from Project</h2>
-    <form method="post">
-      <label for="remove_member_username">Member Username:</label>
-      <input
-        type="text"
-        id="remove_member_username"
-        name="remove_member_username"
-        required
-      />
-      <br />
-      <button type="submit">Remove Member</button>
-    </form>
-
-    <!-- Assign Member form -->
-    <h2>Assign Member to Task</h2>
-    <form method="post">
-      <label for="assign_task_title">Task Title:</label>
-      <input
-        type="text"
-        id="assign_task_title"
-        name="assign_task_title"
-        required
-      />
-      <br />
-      <label for="assignee_username">Assignee Username:</label>
-      <input
-        type="text"
-        id="assignee_username"
-        name="assignee_username"
-        required
-      />
-      <br />
-      <button type="submit">Assign Member</button>
-    </form>
-
-    <!-- Remove Assignee form -->
-    <h2>Remove Assignee from Task</h2>
-    <form method="post">
-      <label for="remove_assign_task_title">Task Title:</label>
-      <input
-        type="text"
-        id="remove_assign_task_title"
-        name="remove_assign_task_title"
-        required
-      />
-      <br />
-      <label for="remove_assignee_username">Assignee Username:</label>
-      <input
-        type="text"
-        id="remove_assignee_username"
-        name="remove_assignee_username"
-        required
-      />
-      <br />
-      <button type="submit">Remove Assignee</button>
-    </form>
-
-    <!-- View Members button -->
-    <h2>View Members</h2>
-    <form
-      method="post"
-      action="{{ url_for('manage_tasks', project_title=project_title) }}"
-    >
-      <button type="submit" name="view_members">View Members</button>
-    </form>
-
-    <!-- Back to Projects link -->
-    <a href="{{ url_for('projects') }}">Back to Projects</a>
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script>
+      document
+        .getElementById("dark-mode-toggle")
+        .addEventListener("change", function () {
+          document.body.classList.toggle("dark-mode");
+        });
+    </script>
   </body>
 </html>

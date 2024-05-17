@@ -1,20 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Members - {{ project_title }}</title>
-</head>
-<body>
-    <h1>Members of Project: {{ project_title }}</h1>
-    
-    <ul>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trellomize - Project Management App</title>
+    <link rel="stylesheet" href="\static\styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMt23cez/3paNdF+N8FkVSm7K4U5xFe5R6oRfrv"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div class="dark-mode-toggle">
+      <input type="checkbox" id="dark-mode-toggle" />
+      <label for="dark-mode-toggle">
+        <i class="fas fa-moon"></i>
+      </label>
+    </div>
+    <div class="container">
+      <h1>Members of Project: {{ project_title }}</h1>
+
+      <ul>
         {% for member in members %}
         <li>{{ member }}</li>
         {% endfor %}
-    </ul>
+      </ul>
 
-    <!-- Back to Manage Tasks link -->
-    <a href="{{ url_for('manage_tasks', project_title=project_title) }}">Back to Manage Tasks</a>
-</body>
+      <!-- Back to Manage Tasks link -->
+      <a href="{{ url_for('manage_tasks', project_title=project_title) }}"
+        >Back to Manage Tasks</a
+      >
+    </div>
+    <script>
+      document
+        .getElementById("dark-mode-toggle")
+        .addEventListener("change", function () {
+          document.body.classList.toggle("dark-mode");
+        });
+    </script>
+  </body>
 </html>

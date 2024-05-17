@@ -1,35 +1,56 @@
-<!-- projects_list.html -->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projects List - Trellomize</title>
-</head>
-<body>
-    <h1>Projects List</h1>
-    <table border="1">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trellomize - Project Management App</title>
+    <link rel="stylesheet" href="\static\styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMt23cez/3paNdF+N8FkVSm7K4U5xFe5R6oRfrv"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div class="dark-mode-toggle">
+      <input type="checkbox" id="dark-mode-toggle" />
+      <label for="dark-mode-toggle">
+        <i class="fas fa-moon"></i>
+      </label>
+    </div>
+    <div class="container">
+      <h1>Projects List</h1>
+      <table border="1">
         <thead>
-            <tr>
-                <th>Title</th>
-                <th>Owner</th>
-                <th>Start Date</th>
-            </tr>
+          <tr>
+            <th>Title</th>
+            <th>Owner</th>
+            <th>Start Date</th>
+          </tr>
         </thead>
         <tbody>
-            {% for project in projects %}
-            <tr>
-                <td>{{ project.title }}</td>
-                <td>{{ project.owner }}</td>
-                <td>{{ project.start_date }}</td>
-            </tr>
-            {% endfor %}
+          {% for project in projects %}
+          <tr>
+            <td>{{ project.title }}</td>
+            <td>{{ project.owner }}</td>
+            <td>{{ project.start_date }}</td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
-    <a href="{{ url_for('profile') }}">Profile Settings</a><br>
-    <a href="{{ url_for('logout_route') }}">Logout</a>
+      </table>
+      <a href="{{ url_for('profile') }}">Profile Settings</a><br />
+      <a href="{{ url_for('logout_route') }}">Logout</a>
 
-    <!-- Add link to create project -->
-    <a href="{{ url_for('create_project') }}">Create New Project</a>
-</body>
+      <!-- Add link to create project -->
+      <a href="{{ url_for('create_project') }}">Create New Project</a>
+    </div>
+    <script>
+      document
+        .getElementById("dark-mode-toggle")
+        .addEventListener("change", function () {
+          document.body.classList.toggle("dark-mode");
+        });
+    </script>
+  </body>
 </html>
