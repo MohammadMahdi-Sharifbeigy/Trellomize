@@ -150,11 +150,23 @@ def display_project(project_title, project_manager, task_manager):
                         console.print("")
 
             except ValueError as e:
-                console.print(f"[danger]{e}[/danger]")
+                console.print(f"{e}")
                 
-            action = Prompt.ask("Choose an action: (a)dd task, (m)ove task, (d)elete task, (as)sign member, (r)emove assignee, (b)ack", choices=["a", "m", "d", "as", "r", "b"])
-
-            if action == "a":
+            menu_options = {
+                "1": "Add Task",
+                "2": "Edit Task",
+                "3": "Move Task",
+                "4": "Delete Task",
+                "5": "Add Member",
+                "6": "Remove Member",
+                "7": "Assign Member",
+                "8": "Remove Assignee",
+                "0": "Back",
+            }
+            for key, value in menu_options.items():
+                console.print(f"[{key}] {value}")
+            action = Prompt.ask("Select an option", choices=menu_options.keys())
+            if action == "1":
                 try:
                     task_title = Prompt.ask("Enter task title")
                     task_description = Prompt.ask("Enter task description (optional)", default="")
@@ -169,60 +181,120 @@ def display_project(project_title, project_manager, task_manager):
                     }
 
                     task_manager.add_task(project_title, task_title, task_description, task_duration, task_priority)
-                    console.print(f"[green]Task '{task_title}' added successfully![/green]")
+                    console.print(f"Task '{task_title}' added successfully!", style="success")
                 except Exception as e:
-                    console.print(f"[danger]An error occurred while adding the task: {e}[/danger]")
-
-            elif action == "m":
+                    console.print(f"An error occurred while adding the task: {e}", style="danger")
+            elif action == "2":
+                try:
+                    task_title = Prompt.ask("Enter task title to edit")
+                    new_title = Prompt.ask("Enter new title (optional)")
+                    new_description = Prompt.ask("Enter new description (optional)")
+                    new_duration = Prompt.ask("Enter new duration (days) (optional)")
+                    new_priority = Prompt.ask("Enter new priority (CRITICAL, HIGH, MEDIUM, LOW) (optional)", choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"])
+                    task_manager.edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
+                    console.print(f"Task '{task_title}' updated successfully!", style="success")
+                except Exception as e:
+                    console.print(f"An error occurred while updating the task: {e}", style="danger")
+            elif action == "3":
                 try:
                     task_title = Prompt.ask("Enter task title to move")
                     new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED)", choices=["TODO", "DOING", "DONE", "ARCHIVED"])
                     task_manager.move_task(project_title, task_title, new_status)
-                    console.print(f"[green]Task '{task_title}' moved to {new_status} successfully![/green]")
+                    console.print(f"Task '{task_title}' moved to {new_status} successfully!", style="success")
                 except Exception as e:
-                    console.print(f"[danger]An error occurred while moving the task: {e}[/danger]")
+                    console.print(f"An error occurred while moving the task: {e}", style="danger")
 
-            elif action == "d":
+            elif action == "4":
                 try:
                     task_title = Prompt.ask("Enter task title to delete")
                     task_manager.delete_task(project_title, task_title)
-                    console.print(f"[green]Task '{task_title}' deleted successfully![/green]")
+                    console.print(f"Task '{task_title}' deleted successfully!", style="success")
                 except Exception as e:
-                    console.print(f"[danger]An error occurred while deleting the task: {e}[/danger]")
+                    console.print(f"An error occurred while deleting the task: {e}", style="danger")
 
-            elif action == "as":
+            elif action == "5":
+                try:
+                    console.print("Available members:")
+                    avl_members = set(user_manager.get_members()) - set(project_manager.get_project(project_title)["members"])
+                    if not avl_members:
+                        console.print("No members available to add!", style="warning")
+                    else:
+                        for member in avl_members:
+                            console.print(member)
+                        member_name = Prompt.ask("Enter member's name to add")
+                        while member_name not in avl_members and member_name != '0':
+                            console.print(f"Member '{member_name}' not found! Enter 0 to exit", style="danger")
+                            member_name = Prompt.ask("Enter member's name to add")
+                        if member_name != '0':
+                            project_manager.add_member(project_title, member_name, project_manager)
+                            console.print(f"Member '{member_name}' added successfully!", style="success")
+                except Exception as e:
+                    console.print(f"An error occurred while adding the member: {e}", style="danger")
+
+            elif action == "6":
+                try:
+                    console.print("Members in the project:")
+                    for member in project_manager.get_project(project_title)["members"]:
+                        console.print(member)
+                    member_name = Prompt.ask("Enter member's name to remove")
+                    while member_name not in project_manager.get_project(project_title)["members"] and member_name != '0':
+                        console.print(f"Member '{member_name}' is not part of the project! Enter 0 to exit", style="danger")
+                        member_name = Prompt.ask("Enter member's name to remove")
+                    if member_name != '0':
+                        project_manager.remove_member_from_project(project_title, member_name)
+                        console.print(f"Member '{member_name}' removed successfully!", style="success")
+                except Exception as e:
+                    console.print(f"An error occurred while removing the member: {e}", style="danger")
+
+            elif action == "7":
                 try:
                     task_title = Prompt.ask("Enter task title to assign a member")
+                    console.print("Members in the project:")
+                    for member in project_manager.get_project(project_title)["members"]:
+                        console.print(member)
                     member_name = Prompt.ask("Enter member's name to assign")
-                    task_manager.assign_member(project_title, task_title, member_name)
-                    console.print(f"[green]Member '{member_name}' assigned to task '{task_title}' successfully![/green]")
+                    while member_name not in project_manager.get_project(project_title)["members"] and member_name != '0':
+                        console.print(f"Member '{member_name}' is not part of the project! Enter 0 to exit", style="danger")
+                        member_name = Prompt.ask("Enter member's name to assign")
+                    if member_name != '0':
+                        task_manager.assign_member(project_title, task_title, member_name)
+                        console.print(f"Member '{member_name}' assigned to task '{task_title}' successfully!", style="success")
                 except Exception as e:
-                    console.print(f"[danger]An error occurred while assigning the member: {e}[/danger]")
+                    console.print(f"An error occurred while assigning the member: {e}", style="danger")
 
-            elif action == "r":
+            elif action == "8":
                 try:
                     task_title = Prompt.ask("Enter task title to remove assignee")
+                    console.print("Assignees in the task:")
+                    for assignee in task_manager.get_task(project_title, task_title)["assignees"]:
+                        console.print(assignee)
                     member_name = Prompt.ask("Enter member's name to remove")
-                    task_manager.remove_assignee_from_task(project_title, task_title, member_name)
-                    console.print(f"[green]Member '{member_name}' removed from task '{task_title}' successfully![/green]")
+                    while member_name not in task_manager.get_task(project_title, task_title)["assignees"] and member_name != '0':
+                        console.print(f"Member '{member_name}' is not assigned to the task! Enter 0 to exit", style="danger")
+                        member_name = Prompt.ask("Enter member's name to remove")
+                    if member_name != '0':
+                        task_manager.remove_assignee_from_task(project_title, task_title, member_name)
+                        console.print(f"Member '{member_name}' removed from task '{task_title}' successfully!", style="success")
                 except Exception as e:
-                    console.print(f"[danger]An error occurred while removing the assignee: {e}[/danger]")
+                    console.print(f"An error occurred while removing the assignee: {e}", style="danger")
 
-            elif action == "b":
+            elif action == "0":
                 break
-            
+
             else:
-                console.print("[danger]Invalid option, please try again.[/danger]")
-            # project_manager.update_data()
+                console.print("Invalid option, please try again.", style="danger")
+
+            
+            Prompt.ask("Press any key to continue...")
     except Exception as e:
-        console.print(f"[danger]An error occurred in the menu: {e}[/danger]")
+        console.print(f"An error occurred in the menu: {e}")
 
 def add_task_to_board(project_title):
     # Collect task details from the user
     task_title = Prompt.ask("Enter task title:")
     description = input("Enter task description (optional):")
     duration = int(input("Enter task duration (days):"))
-    priority = Prompt.ask("Enter task priority (CRITICAL, HIGH, MEDIUM, LOW):",choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"],)
+    priority = Prompt.ask("Enter task priority (CRITICAL, HIGH, MEDIUM, LOW):",choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"])
     status = "TODO"  # Default status for new tasks
 
     # Create and add the task using the task manager

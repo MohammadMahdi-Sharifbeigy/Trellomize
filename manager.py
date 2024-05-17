@@ -219,6 +219,15 @@ class UserManager(DataManager):
 
         self._save_data(self.user_data, self.user_filename)
         print(f"[green]User '{username}' updated successfully![/]")
+    
+    def get_members(self):
+        """
+        Retrieve all members.
+        """
+        self.reload_data()
+        users = self.user_data.get("users", [])
+        members = [user["username"] for user in users if not user.get("is_admin")]
+        return members
 
 
 class ProjectManager(DataManager):
@@ -332,7 +341,7 @@ class TaskManager(DataManager):
         self.reload_data()
         project = self.get_project(project_title)
         if not project:
-            raise ValueError(f"Project with TITLE '{project_title}' not found!")
+            raise ValueError(f"Project with title '{project_title}' not found!")
 
         task = {
             "title": task_title,
@@ -350,14 +359,30 @@ class TaskManager(DataManager):
 
         project["tasks"][status].append(task)
         self._save_data(self.data, self.data_filename)
-        print(f"Task created with TITLE: {task_title}")
         return task
+    
+    def edit_task(self, project_title, task_title, new_title, new_description, new_duration, new_priority):
+        self.reload_data()
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError(f"Project with title '{project_title}' not found!")
+
+        for status, task_list in project["tasks"].items():
+            for task in task_list:
+                if task["title"] == task_title:
+                    task["title"] = new_title if new_title else task["title"]
+                    task["description"] = new_description if new_description else task["description"]
+                    task["end_date"] = (task["start_date"] + timedelta(days=new_duration)).isoformat() if new_duration else task["end_date"]
+                    task["priority"] = new_priority if new_priority else task["priority"]
+                    self._save_data(self.data, self.data_filename)
+                    return
+        raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
 
     def delete_task(self, project_title, task_title):
         self.reload_data()
         project = self.get_project(project_title)
         if not project:
-            raise ValueError(f"Project with TITLE '{project_title}' not found!")
+            raise ValueError(f"Project with title '{project_title}' not found!")
 
         for task_list in project["tasks"].values():
             for task in task_list:
@@ -365,13 +390,13 @@ class TaskManager(DataManager):
                     task_list.remove(task)
                     self._save_data(self.data, self.data_filename)
                     return
-        raise ValueError(f"Task with TITLE '{task_title}' not found in project '{project_title}'.")
+        raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
 
     def move_task(self, project_title, task_title, new_status):
         self.reload_data()
         project = self.get_project(project_title)
         if not project:
-            raise ValueError(f"Project with TITLE '{project_title}' not found!")
+            raise ValueError(f"Project with title '{project_title}' not found!")
 
         for status, task_list in project["tasks"].items():
             for task in task_list:
@@ -382,7 +407,7 @@ class TaskManager(DataManager):
                     self._save_data(self.data, self.data_filename)
                     return
 
-        raise ValueError(f"Task with TITLE '{task_title}' not found in project '{project_title}'.")
+        raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
 
     def assign_member(self, project_title, task_title, username):
         self.reload_data()
@@ -399,7 +424,6 @@ class TaskManager(DataManager):
                         raise ValueError("User already assigned to this task!")
                     task["assignees"].append(username)
                     self._save_data(self.data, self.data_filename)
-                    print(f"[green]User '{username}' successfully assigned to task '{task['title']}![/]")
                     return
 
         if not task_found:
@@ -417,7 +441,6 @@ class TaskManager(DataManager):
                     if username not in task["assignees"]:
                         raise ValueError("User is not assigned to this task!")
                     task["assignees"].remove(username)
-                    print(f"[green]User '{username}' successfully removed from task '{task['title']}![/]")
                     self._save_data(self.data, self.data_filename)
                     return
 
@@ -427,12 +450,24 @@ class TaskManager(DataManager):
         self.reload_data()
         project = self.get_project(project_title)
         if not project:
-            raise ValueError(f"Project with TITLE '{project_title}' not found!")
+            raise ValueError(f"Project with title '{project_title}' not found!")
 
         tasks = []
         for task_list in project["tasks"].values():
             tasks.extend(task_list)
         return tasks
+
+    def get_task(self, project_title, task_title):
+        self.reload_data()
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError(f"Project with title '{project_title}' not found!")
+
+        for task_list in project["tasks"].values():
+            for task in task_list:
+                if task["title"] == task_title:
+                    return task
+        return None
 
 
 if __name__ == "__main__":
