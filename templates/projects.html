@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects</title>
+</head>
+<body>
+    <h1>Projects</h1>
+    <p>Welcome, {{ username }}</p>
+    <ul>
+        {% for project in projects %}
+        <li><a href="{{ url_for('manage_tasks', project_title=project.title) }}">{{ project.title }}</a> - Owner: {{ project.owner }}, Created: {{ project.start_date }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('create_project_route') }}">Create New Project</a>
+    <a href="{{ url_for('profile') }}">Profile Settings</a>
+    <a href="{{ url_for('logout_route') }}">Logout</a>
+</body>
+</html>

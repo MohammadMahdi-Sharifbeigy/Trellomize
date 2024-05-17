@@ -1,0 +1,35 @@
+<!-- projects_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects List - Trellomize</title>
+</head>
+<body>
+    <h1>Projects List</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Owner</th>
+                <th>Start Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>{{ project.title }}</td>
+                <td>{{ project.owner }}</td>
+                <td>{{ project.start_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('profile') }}">Profile Settings</a><br>
+    <a href="{{ url_for('logout_route') }}">Logout</a>
+
+    <!-- Add link to create project -->
+    <a href="{{ url_for('create_project') }}">Create New Project</a>
+</body>
+</html>

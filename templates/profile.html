@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Trellomize</title>
+</head>
+<body>
+    <h1>Profile Settings</h1>
+    <p>Username: {{ user.username }}</p>
+    <p>Email: {{ user.email }}</p>
+    <a href="{{ url_for('edit_password') }}">Edit Password</a><br>
+    <a href="{{ url_for('edit_email') }}">Edit Email</a><br>
+    <a href="{{ url_for('projects') }}">Back to Projects</a>
+    <a href="{{ url_for('logout_route') }}">Logout</a>
+</body>
+</html>

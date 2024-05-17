@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Members - {{ project_title }}</title>
+</head>
+<body>
+    <h1>Members of Project: {{ project_title }}</h1>
+    
+    <ul>
+        {% for member in members %}
+        <li>{{ member }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Back to Manage Tasks link -->
+    <a href="{{ url_for('manage_tasks', project_title=project_title) }}">Back to Manage Tasks</a>
+</body>
+</html>

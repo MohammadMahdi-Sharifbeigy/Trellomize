@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.title }} - Trellomize</title>
+</head>
+<body>
+    <h1>{{ project.title }}</h1>
+    <p>Start Date: {{ project.start_date }}</p>
+    <h2>Tasks</h2>
+    <ul>
+        {% for task in project.tasks %}
+        <li>{{ task.title }} - {{ task.status }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('projects') }}">Back to Projects</a>
+</body>
+</html>

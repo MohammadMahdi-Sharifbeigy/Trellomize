@@ -1,0 +1,19 @@
+<!-- create_project.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Project - Trellomize</title>
+</head>
+<body>
+    <h1>Create New Project</h1>
+    <form action="{{ url_for('create_project_route') }}" method="post">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title"><br>
+        <label for="start_date">Start Date:</label><br>
+        <input type="text" id="start_date" name="start_date"><br>
+        <input type="submit" value="Create">
+    </form>
+</body>
+</html>
