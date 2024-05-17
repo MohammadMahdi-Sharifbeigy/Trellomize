@@ -6,7 +6,6 @@ import uuid
 from datetime import date, datetime, timedelta
 from io import StringIO
 
-
 import bcrypt
 import dash
 import matplotlib.dates as mdates
@@ -16,7 +15,6 @@ import plotly.express as px
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from rich import print
-
 
 
 class CustomHelpFormatter(argparse.HelpFormatter):
@@ -241,7 +239,7 @@ class ProjectManager(DataManager):
     """
 
 
-    def create_project(self, title, start_date):
+    def create_project(self, title, start_date, owner):
         """
         Creates a new project.
         """
@@ -251,12 +249,12 @@ class ProjectManager(DataManager):
             if existing_project["title"] == title:
                 raise ValueError(f"Project with title '{title}' already exists!")
 
-
         project = {
             "id": project_id,
             "title": title,
             "start_date": datetime.strptime(start_date, "%d/%m/%Y").strftime("%Y-%m-%d"),
-            "members": [],
+            "owner": owner,
+            "members": [owner],
             "tasks": {"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []},
         }
         self.data.setdefault("projects", []).append(project)
@@ -264,6 +262,11 @@ class ProjectManager(DataManager):
         print(f"[green]Project created with title: {title}[/]")
         return project
 
+    def is_project_owner(self, project, username):
+        """
+        Checks if the given user is the owner of the project.
+        """
+        return project.get("owner") == username
 
     def get_project(self, title):
         """
@@ -273,6 +276,17 @@ class ProjectManager(DataManager):
             if project["title"] == title:
                 return project
         return None
+
+    def get_projects_for_user(self, username):
+        """
+        Retrieves a list of projects for a given user.
+        """
+        projects = self.data.get("projects", [])
+        user_projects = []
+        for project in projects:
+            if username in project.get("members", []):
+                user_projects.append(project)
+        return user_projects
 
     def list_projects(self):
         """
@@ -285,7 +299,7 @@ class ProjectManager(DataManager):
         return projects
 
 
-    def add_member(self, project_title, username):
+    def add_member(self, project_title, username, project_manager):
         """
         Adds a user to a project.
         """
@@ -300,7 +314,6 @@ class ProjectManager(DataManager):
             return
         project["members"].append(username)
         self._save_data(self.data, self.data_filename)
-        print(f"[green]User '{username}' successfully added to the project![/]")
 
 
     def remove_member_from_project(self, project_title, username):
@@ -317,7 +330,6 @@ class ProjectManager(DataManager):
 
 
         project["members"].remove(username)
-        print(f"[green]User '{username}' successfully removed from the project![/]")
         self._save_data(self.data, self.data_filename)
 
 
