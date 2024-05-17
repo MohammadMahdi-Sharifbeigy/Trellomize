@@ -119,13 +119,17 @@ class DataManager:
     A class for managing project and user data.
     """
 
-
     def __init__(self, user_filename="users.json", data_filename="data.json"):
         self.user_filename = user_filename
         self.data_filename = data_filename
+        self.reload_data()
+
+    def reload_data(self):
+        """
+        Reload data from the JSON files.
+        """
         self.user_data = self._load_data(self.user_filename)
         self.data = self._load_data(self.data_filename)
-
 
     def _load_data(self, filename):
         try:
@@ -134,13 +138,11 @@ class DataManager:
         except FileNotFoundError:
             return {}
 
-
     def _save_data(self, data, filename):
         if "tasks" in data and not data["tasks"]:
             del data["tasks"]
         with open(filename, "w") as f:
             json.dump(data, f, indent=2)
-
 
     def purge_data(self):
         """
@@ -152,9 +154,9 @@ class DataManager:
             with open(self.data_filename, "w") as f:
                 json.dump({"projects": [], "tasks": []}, f)
             print("[yellow]All data has been purged![/]")
+            self.reload_data()
         except FileNotFoundError:
             print("[bold red]Warning: No data to purge![/]")
-
 
 
 class UserManager(DataManager):
@@ -162,26 +164,16 @@ class UserManager(DataManager):
     A class for managing user data.
     """
 
-
-    def __init__(self, user_filename="users.json"):
-        self.user_filename = user_filename
-        self._load_data(self.user_filename)
-
-
-    def create_user(
-        self, username, password, is_active=True, email=None, is_admin=False
-    ):
+    def create_user(self, username, password, is_active=True, email=None, is_admin=False):
         """
         Creates a new user account.
         """
-        data = self._load_data(self.user_filename)
-        users = data.get("users", [])
-
+        self.reload_data()
+        users = self.user_data.get("users", [])
 
         for user in users:
             if user["username"] == username:
                 raise ValueError(f"User with username '{username}' already exists!")
-
 
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
         user = {
@@ -192,8 +184,8 @@ class UserManager(DataManager):
             "is_admin": is_admin,
         }
         users.append(user)
-        data["users"] = users
-        self._save_data(data, self.user_filename)
+        self.user_data["users"] = users
+        self._save_data(self.user_data, self.user_filename)
         if email and is_active is not None:
             print(f"[blue italic]User account created: username='{username}', password='{password}', Email='{email}', Is_active='{is_active}'[/]")
         elif email:
@@ -202,24 +194,22 @@ class UserManager(DataManager):
             print(f"[blue italic]User account created: username='{username}', password='{password}', No email provided[/]")
         return user
 
-
     def get_user(self, username):
         """
         Retrieve user data by username.
         """
-        data = self._load_data(self.user_filename)
-        for user in data.get("users", []):
+        self.reload_data()
+        for user in self.user_data.get("users", []):
             if user["username"] == username:
                 return user
         return None
-
 
     def update_user(self, username, updates):
         """
         Update user data.
         """
-        data = self._load_data(self.user_filename)
-        users = data.get("users", [])
+        self.reload_data()
+        users = self.user_data.get("users", [])
         for user in users:
             if user["username"] == username:
                 user.update(updates)
@@ -227,10 +217,8 @@ class UserManager(DataManager):
         else:
             raise ValueError("User not found")
 
-
-        self._save_data(data, self.user_filename)
+        self._save_data(self.user_data, self.user_filename)
         print(f"[green]User '{username}' updated successfully![/]")
-
 
 
 class ProjectManager(DataManager):
@@ -238,11 +226,11 @@ class ProjectManager(DataManager):
     A class for managing project data.
     """
 
-
     def create_project(self, title, start_date, owner):
         """
         Creates a new project.
         """
+        self.reload_data()
         project_id = str(uuid.uuid4())
         projects = self.data.get("projects", [])
         for existing_project in projects:
@@ -272,6 +260,7 @@ class ProjectManager(DataManager):
         """
         Retrieves a project by its title.
         """
+        self.reload_data()
         for project in self.data.get("projects", []):
             if project["title"] == title:
                 return project
@@ -281,6 +270,7 @@ class ProjectManager(DataManager):
         """
         Retrieves a list of projects for a given user.
         """
+        self.reload_data()
         projects = self.data.get("projects", [])
         user_projects = []
         for project in projects:
@@ -292,60 +282,58 @@ class ProjectManager(DataManager):
         """
         Retrieves and returns a list of all projects.
         """
+        self.reload_data()
         projects = self.data.get("projects", [])
         if not projects:
             print("[bold magenta]No projects found![/]")
             return []
         return projects
 
-
     def add_member(self, project_title, username, project_manager):
         """
         Adds a user to a project.
         """
+        self.reload_data()
         project = project_manager.get_project(project_title)
         if not project:
             raise ValueError(f"Project with Title'{project_title}' not found!")
 
         if username in project.get("members", []):
-            print(
-                f"[bold red]Error: User '{username}' is already a member of the project![/]"
-            )
+            print(f"[bold red]Error: User '{username}' is already a member of the project![/]")
             return
         project["members"].append(username)
         self._save_data(self.data, self.data_filename)
-
 
     def remove_member_from_project(self, project_title, username):
         """
         Removes a user from a project.
         """
+        self.reload_data()
         project = self.get_project(project_title)
         if not project:
             raise ValueError("Project not found!")
 
-
         if username not in project["members"]:
             raise ValueError("User is not a member of the project!")
-
 
         project["members"].remove(username)
         self._save_data(self.data, self.data_filename)
 
 
-
 class TaskManager(DataManager):
     def get_project(self, project_title):
+        self.reload_data()
         for project in self.data.get("projects", []):
             if project["title"] == project_title:
                 return project
         return None
 
     def add_task(self, project_title, task_title, description, duration, priority, status="TODO"):
+        self.reload_data()
         project = self.get_project(project_title)
         if not project:
             raise ValueError(f"Project with TITLE '{project_title}' not found!")
-        
+
         task = {
             "title": task_title,
             "description": description,
@@ -366,6 +354,7 @@ class TaskManager(DataManager):
         return task
 
     def delete_task(self, project_title, task_title):
+        self.reload_data()
         project = self.get_project(project_title)
         if not project:
             raise ValueError(f"Project with TITLE '{project_title}' not found!")
@@ -376,11 +365,10 @@ class TaskManager(DataManager):
                     task_list.remove(task)
                     self._save_data(self.data, self.data_filename)
                     return
-        raise ValueError(
-            f"Task with TITLE '{task_title}' not found in project '{project_title}'."
-        )
+        raise ValueError(f"Task with TITLE '{task_title}' not found in project '{project_title}'.")
 
     def move_task(self, project_title, task_title, new_status):
+        self.reload_data()
         project = self.get_project(project_title)
         if not project:
             raise ValueError(f"Project with TITLE '{project_title}' not found!")
@@ -396,8 +384,8 @@ class TaskManager(DataManager):
 
         raise ValueError(f"Task with TITLE '{task_title}' not found in project '{project_title}'.")
 
-
     def assign_member(self, project_title, task_title, username):
+        self.reload_data()
         project = self.get_project(project_title)
         if not project:
             raise ValueError("Project not found!")
@@ -411,15 +399,14 @@ class TaskManager(DataManager):
                         raise ValueError("User already assigned to this task!")
                     task["assignees"].append(username)
                     self._save_data(self.data, self.data_filename)
-                    print(
-                        f"[green]User '{username}' successfully assigned to task '{task['title']}![/]"
-                    )
+                    print(f"[green]User '{username}' successfully assigned to task '{task['title']}![/]")
                     return
 
         if not task_found:
             raise ValueError("Task not found in project!")
 
     def remove_assignee_from_task(self, project_title, task_title, username):
+        self.reload_data()
         project = self.get_project(project_title)
         if not project:
             raise ValueError("Project not found!")
@@ -430,15 +417,14 @@ class TaskManager(DataManager):
                     if username not in task["assignees"]:
                         raise ValueError("User is not assigned to this task!")
                     task["assignees"].remove(username)
-                    print(
-                        f"[green]User '{username}' successfully removed from task '{task['title']}![/]"
-                    )
+                    print(f"[green]User '{username}' successfully removed from task '{task['title']}![/]")
                     self._save_data(self.data, self.data_filename)
                     return
 
         raise ValueError("Task not found in project!")
 
     def get_tasks_for_project(self, project_title):
+        self.reload_data()
         project = self.get_project(project_title)
         if not project:
             raise ValueError(f"Project with TITLE '{project_title}' not found!")
@@ -447,6 +433,7 @@ class TaskManager(DataManager):
         for task_list in project["tasks"].values():
             tasks.extend(task_list)
         return tasks
+
 
 if __name__ == "__main__":
     data_manager = DataManager()

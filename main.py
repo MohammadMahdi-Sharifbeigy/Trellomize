@@ -56,29 +56,10 @@ def display_project_list(project_manager, current_user):
 
         # Add or remove member to project
         while True:
-            user_choice = Prompt.ask("Choose an action: (a)dd member, (r)emove member, (b)ack", choices=["a", "r", "b"])
-            if user_choice == "a":
-                project_title = Prompt.ask("Enter the project title:")
-                # project = project_manager.get_project(project_title)
-                username = Prompt.ask("Enter the username of the member to add:")
-                try:
-                    project_manager.add_member(project_title, username, project_manager)
-                    console.print(f"User '{username}' successfully added to the project!", style="green")
-                except Exception as e:
-                    console.print(f"Error adding member: {e}", style="danger")
-                    continue
-            elif user_choice == "r":
-                project_title = Prompt.ask("Enter the project title:")
-                # project = project_manager.get_project(project_title)
-                username = Prompt.ask("Enter the username of the member to remove:")
-                try:
-                    project_manager.remove_member_from_project(project_title, username)
-                    console.print(f"User '{username}' successfully removed from the project!", style="success")
-                except Exception as e:
-                    console.print(f"Error removing member: {e}", style="danger")
-                    continue
-            elif user_choice == "b":
+            project_title = Prompt.ask("Enter the project title, or press enter to go back")
+            if project_title == "":
                 break
+            display_project(project_title, project_manager, task_manager)
 
     else:
         console.print("No projects available!", style="warning")
@@ -129,7 +110,7 @@ def profile_settings(username):
 
         console.print(f"{field} updated successfully!", style="success")
 
-def display_project_board(project_title, project_manager, task_manager):
+def display_project(project_title, project_manager, task_manager):
     clear_screen()
     try:
         while True :
@@ -229,9 +210,10 @@ def display_project_board(project_title, project_manager, task_manager):
 
             elif action == "b":
                 break
-
+            
             else:
                 console.print("[danger]Invalid option, please try again.[/danger]")
+            # project_manager.update_data()
     except Exception as e:
         console.print(f"[danger]An error occurred in the menu: {e}[/danger]")
 
@@ -246,7 +228,7 @@ def add_task_to_board(project_title):
     # Create and add the task using the task manager
     task_manager.add_task(project_title, task_title, description, duration, priority, status)
     # Update the project board display
-    display_project_board(project_title)
+    display_project(project_title)
 
 def move_task_on_board(project_title):
     task_table = Table(title="Available Tasks", style="bold magenta")
@@ -264,7 +246,7 @@ def move_task_on_board(project_title):
 
     task_manager.move_task(project_title, task_title, new_status)
 
-    display_project_board(project_title)
+    display_project(project_title)
 
 def delete_task_from_board(project_title):
     task_table = Table(title="Available Tasks", style="bold magenta")
@@ -282,7 +264,7 @@ def delete_task_from_board(project_title):
     except ValueError as e:
         console.print(e, style="danger")
     else:
-        display_project_board(project_title)
+        display_project(project_title)
 
 def main():
     console.print("Welcome to the Trellomize app!", style="success")
@@ -345,7 +327,7 @@ def main_menu(is_admin=False, current_user=None):
                 start_date = Prompt.ask(
                     "Enter the start date of the project (dd/mm/yyyy)"
                 )
-                project = project_manager.create_project(title, start_date)
+                project = project_manager.create_project(title, start_date, current_user)
                 console.print(f"New project created successfully with Title: {project['title']}", style="success")
             elif choice == "3":
                 profile_settings(current_user)
@@ -355,7 +337,8 @@ def main_menu(is_admin=False, current_user=None):
                 if not project:
                     console.print(f"Project with title '{project_title}' not found", style="danger")
                     continue
-                display_project_board(project_title, project_manager, task_manager)
+                # display_project_board(project_title, project_manager, task_manager)
+                console.print("Accessing Project Board...")
             elif choice == "5" and is_admin:
                 console.print("Accessing Admin Settings...")
             elif choice == "0":
