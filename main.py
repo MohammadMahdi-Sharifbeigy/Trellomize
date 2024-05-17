@@ -115,6 +115,7 @@ def profile_settings(username):
 
         choice = Prompt.ask("Select an option", choices=list(choices.keys()))
         if choice == "3":
+            clear_screen()
             break
 
         field = fields[choice]
@@ -302,6 +303,7 @@ def main():
                 password = Prompt.ask("Enter your password", password=True)
                 login_result, user = login(username, password)
                 is_admin = user["is_admin"] if user else False
+                clear_screen()
                 if login_result:
                     console.print(
                         ":white_check_mark: Login successful!", style="success"
@@ -357,34 +359,7 @@ def main_menu(is_admin=False, current_user=None):
                 project = project_manager.create_project(title, start_date)
                 console.print(f"[green]New project created successfully with Title: {project['title']}[/]")
             elif choice == "3":
-                username = current_user
-                user = user_manager.get_user(username)
-                if not user:
-                    console.print("[red]User not found![/]")
-                    continue
-                console.print("[yellow]Edit your profile[/]")
-                fields = {"1": "password", "2": "email"}
-                choices = {key: f"Edit {value}" for key, value in fields.items()}
-                choices["3"] = "Go back"
-                while True:
-                    for key, value in choices.items():
-                        console.print(f"[{key}] {value}")
-                    choice = Prompt.ask("Select an option", choices=list(choices.keys()))
-                    if choice == "3":
-                        break
-                    field = fields[choice]
-                    new_value = Prompt.ask(f"Enter new {field}")
-                    if field == "password":
-                        new_value = bcrypt.hashpw(
-                            new_value.encode("utf-8"), bcrypt.gensalt()
-                        ).decode("utf-8")
-                    updates = {field: new_value}
-                    try:
-                        user_manager.update_user(username, updates)
-                    except Exception as e:
-                        console.print(f"[red]Error updating user: {e}[/]")
-                        continue
-                    console.print(f"[green]{field} updated successfully![/]")
+                profile_settings(current_user)
             elif choice == "4":
                 project_title = Prompt.ask("Enter the project title")
                 project = project_manager.get_project(project_title)
