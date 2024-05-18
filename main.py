@@ -155,6 +155,8 @@ def display_project(project_title, project_manager, task_manager, current_user):
             except ValueError as e:
                 console.print(f"{e}", style="danger")
                 
+            member_role = project_manager.get_member_role(project_title, current_user)
+            
             menu_options = {
                 "1": "Add Task",
                 "2": "Edit Task",
@@ -176,6 +178,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 console.print(f"[{key}] {value}")
             action = Prompt.ask("Select an option", choices=menu_options.keys())
             if action == "1":
+                if member_role == "member":
+                    console.print("You do not have permission to add tasks!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     task_title = Prompt.ask("Enter task title")
                     task_description = Prompt.ask("Enter task description (optional)", default="")
@@ -194,6 +200,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 except Exception as e:
                     console.print(f"An error occurred while adding the task: {e}", style="danger")
             elif action == "2":
+                if member_role == "member":
+                    console.print("You do not have permission to edit tasks!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     task_title = Prompt.ask("Enter task title to edit")
                     new_title = Prompt.ask("Enter new title (optional)")
@@ -205,6 +215,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 except Exception as e:
                     console.print(f"An error occurred while updating the task: {e}", style="danger")
             elif action == "3":
+                if member_role == "member":
+                    console.print("You do not have permission to move tasks!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     task_title = Prompt.ask("Enter task title to move")
                     new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED)", choices=["TODO", "DOING", "DONE", "ARCHIVED"])
@@ -214,6 +228,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     console.print(f"An error occurred while moving the task: {e}", style="danger")
 
             elif action == "4":
+                if member_role == "member":
+                    console.print("You do not have permission to delete tasks!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     task_title = Prompt.ask("Enter task title to delete")
                     task_manager.delete_task(project_title, task_title)
@@ -222,9 +240,13 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     console.print(f"An error occurred while deleting the task: {e}", style="danger")
 
             elif action == "5":
+                if member_role == "member":
+                    console.print("You do not have permission to add members!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     console.print("Available members:")
-                    avl_members = set(user_manager.get_members()) - set(project_manager.get_project(project_title)["members"])
+                    avl_members = set(user_manager.get_members()) - set(list(member.keys())[0] for member in project_manager.get_project(project_title)["members"])
                     if not avl_members:
                         console.print("No members available to add!", style="warning")
                     else:
@@ -234,19 +256,30 @@ def display_project(project_title, project_manager, task_manager, current_user):
                         while member_name not in avl_members and member_name != '0':
                             console.print(f"Member '{member_name}' not found! Enter 0 to exit", style="danger")
                             member_name = Prompt.ask("Enter member's name to add")
+                        role_list = ["admin", "manager", "member"]
+                        role = Prompt.ask("Enter member's role", choices=role_list)
+                        while role not in role_list:
+                            role = Prompt.ask("Choose a valid role", choices=role_list)
                         if member_name != '0':
-                            project_manager.add_member(project_title, member_name, project_manager)
+                            project_manager.add_member(project_title, member_name, role, project_manager)
                             console.print(f"Member '{member_name}' added successfully!", style="success")
                 except Exception as e:
                     console.print(f"An error occurred while adding the member: {e}", style="danger")
 
             elif action == "6":
+                if member_role == "member":
+                    console.print("You do not have permission to remove members!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
+                    project_members_name = list()
                     console.print("Members in the project:")
                     for member in project_manager.get_project(project_title)["members"]:
-                        console.print(member)
+                        for name, role in member.items():
+                            console.print(f"{name} ({role})")
+                            project_members_name.append(name)
                     member_name = Prompt.ask("Enter member's name to remove")
-                    while member_name not in project_manager.get_project(project_title)["members"] and member_name != '0':
+                    while member_name not in project_members_name and member_name != '0':
                         console.print(f"Member '{member_name}' is not part of the project! Enter 0 to exit", style="danger")
                         member_name = Prompt.ask("Enter member's name to remove")
                     if member_name != '0':
@@ -256,13 +289,19 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     console.print(f"An error occurred while removing the member: {e}", style="danger")
 
             elif action == "7":
+                if member_role == "member":
+                    console.print("You do not have permission to assign members!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     task_title = Prompt.ask("Enter task title to assign a member")
                     console.print("Members in the project:")
                     for member in project_manager.get_project(project_title)["members"]:
-                        console.print(member)
+                        for name, role in member.items():
+                            console.print(f"{name} ({role})")
                     member_name = Prompt.ask("Enter member's name to assign")
-                    while member_name not in project_manager.get_project(project_title)["members"] and member_name != '0':
+                    project_members_name = [list(member.keys())[0] for member in project_manager.get_project(project_title)["members"]]
+                    while member_name not in project_members_name and member_name != '0':
                         console.print(f"Member '{member_name}' is not part of the project! Enter 0 to exit", style="danger")
                         member_name = Prompt.ask("Enter member's name to assign")
                     if member_name != '0':
@@ -272,6 +311,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     console.print(f"An error occurred while assigning the member: {e}", style="danger")
 
             elif action == "8":
+                if member_role == "member":
+                    console.print("You do not have permission to remove assignees!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     task_title = Prompt.ask("Enter task title to remove assignee")
                     console.print("Assignees in the task:")
@@ -291,10 +334,16 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 try:
                     console.print("Members in the project:")
                     for member in project_manager.get_project(project_title)["members"]:
-                        console.print(member)
+                        for name, role in member.items():
+                            console.print(f"{name} ({role})")
                 except Exception as e:
                     console.print(f"An error occurred while viewing the members: {e}", style="danger")
             elif action == "10":
+                # no need to write this, but who cares
+                if member_role != "owner":
+                    console.print("You do not have permission to delete the project!", style="warning")
+                    input("Press any key to continue...")
+                    continue
                 try:
                     project_manager.delete_project(project_title)
                     console.print(f"Project '{project_title}' deleted successfully!", style="success")

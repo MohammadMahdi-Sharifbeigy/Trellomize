@@ -250,7 +250,7 @@ class ProjectManager(DataManager):
             "title": title,
             "start_date": datetime.strptime(start_date, "%d/%m/%Y").strftime("%Y-%m-%d"),
             "owner": owner,
-            "members": [owner],
+            "members": [{owner: "owner"}],
             "tasks": {"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []},
         }
         self.data.setdefault("projects", []).append(project)
@@ -286,7 +286,8 @@ class ProjectManager(DataManager):
         projects = self.data.get("projects", [])
         user_projects = []
         for project in projects:
-            if username in project.get("members", []):
+            members = [list(member.keys())[0] for member in project.get("members", [])]
+            if username in members:
                 user_projects.append(project)
         return user_projects
 
@@ -301,7 +302,7 @@ class ProjectManager(DataManager):
             return []
         return projects
 
-    def add_member(self, project_title, username, project_manager):
+    def add_member(self, project_title, username, role, project_manager):
         """
         Adds a user to a project.
         """
@@ -313,7 +314,9 @@ class ProjectManager(DataManager):
         if username in project.get("members", []):
             print(f"[bold red]Error: User '{username}' is already a member of the project![/]")
             return
-        project["members"].append(username)
+        if not role:
+            role = "viewer"
+        project["members"].append({username: role})
         self._save_data(self.data, self.data_filename)
 
     def remove_member_from_project(self, project_title, username):
@@ -325,10 +328,12 @@ class ProjectManager(DataManager):
         if not project:
             raise ValueError("Project not found!")
 
-        if username not in project["members"]:
+        usernames = [list(member.keys())[0] for member in project["members"]]
+        if username not in usernames:
             raise ValueError("User is not a member of the project!")
 
-        project["members"].remove(username)
+        del project["members"][usernames.index(username)]
+        
         self._save_data(self.data, self.data_filename)
     
     def delete_project(self, project_title):
@@ -342,6 +347,20 @@ class ProjectManager(DataManager):
 
         self.data["projects"].remove(project)
         self._save_data(self.data, self.data_filename)
+        
+    def get_member_role(self, project_title, username):
+        """
+        Retrieves the role of a member in a project.
+        """
+        self.reload_data()
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError(f"Project with title '{project_title}' not found!")
+
+        for member in project.get("members", []):
+            if username in member:
+                return member[username]
+        return None
 
 
 class TaskManager(DataManager):
