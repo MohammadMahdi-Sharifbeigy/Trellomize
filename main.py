@@ -5,6 +5,7 @@ import re
 from datetime import date, datetime, timedelta
 
 import bcrypt
+from rich.columns import Columns
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
@@ -147,10 +148,11 @@ def display_project(project_title, project_manager, task_manager, current_user):
                             assignees = ", ".join(task.get("assignees", []))
                             task_tables[status].add_row(task["title"], assignees, task["priority"], due_date)
 
-                    # Print the task tables
-                    for status, table in task_tables.items():
-                        console.print(table)
-                        console.print("")
+                    # Create a list of the tables to display side by side
+                    tables = [task_tables[status] for status in ["TODO", "DOING", "DONE", "ARCHIVED"]]
+
+                    # Print the task tables side by side
+                    console.print(Columns(tables))
 
             except ValueError as e:
                 console.print(f"{e}", style="danger")
