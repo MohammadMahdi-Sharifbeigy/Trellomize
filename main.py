@@ -447,6 +447,32 @@ def admin_panel():
         else:
             console.print("Invalid option, please try again.", style="danger")
 
+def display_project_board(username):
+    all_projects = project_manager.get_projects_for_user(username)
+    all_tasks = []
+    for project in all_projects:
+        for status, tasks in project["tasks"].items():
+            for task in tasks:
+                if task["description"] == "":
+                    task["description"] = "No description"
+                task["project"] = project["title"]
+                task["duration"] = str((datetime.strptime(task["end_date"], "%Y-%m-%d") - datetime.strptime(task["start_date"], "%Y-%m-%d")).days)
+                all_tasks.append(task)
+    if not all_tasks:
+        console.print("No tasks found!", style="warning")
+        return
+    
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Title")
+    table.add_column("Description")
+    table.add_column("Duration")
+    table.add_column("Priority")
+    table.add_column("Status")
+    table.add_column("Project")
+    for task in all_tasks:
+        table.add_row(task["title"], task["description"], task["duration"], task["priority"], task["status"], task["project"])
+    console.print(table)
+
 def main():
     console.print("Welcome to the Trellomize app!", style="success")
     while True:
@@ -519,16 +545,9 @@ def main_menu(is_admin=False, current_user=None):
             elif choice == "3":
                 profile_settings(current_user)
             elif choice == "4":
-                # project_title = Prompt.ask("Enter the project title")
-                # project = project_manager.get_project(project_title)
-                # if not project:
-                #     console.print(f"Project with title '{project_title}' not found", style="danger")
-                #     continue
-                # display_project_board(project_title, project_manager, task_manager)
-                console.print("Accessing Project Board...")
+                display_project_board(current_user)
             elif choice == "5" and is_admin:
                 admin_panel()
-                # console.print("Accessing Admin Settings...")
             elif choice == "0":
                 console.print("Logging Out...", style="danger")
                 break
