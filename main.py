@@ -5,6 +5,7 @@ import re
 from datetime import date, datetime, timedelta
 
 import bcrypt
+from loguru import logger
 from rich.columns import Columns
 from rich.console import Console
 from rich.prompt import Prompt
@@ -12,6 +13,10 @@ from rich.table import Table
 from rich.theme import Theme
 
 from manager import ProjectManager, TaskManager, UserManager
+
+# Set up Loguru configuration
+logger.remove()  # Remove the default handler
+logger.add("app.log", rotation="1 MB", level="DEBUG", format="{time} {level} {message}")
 
 theme = Theme({
     "info": "bold blue",
@@ -32,13 +37,19 @@ def login(username, password):
     with open("users.json") as f:
         users = json.load(f)["users"]
     user = next((user for user in users if user["username"] == username), None)
+    if not user:
+        logger.warning(f"Login failed for {username}: user not found")
+        return False, False
     if not user["is_active"]:
+        logger.warning(f"Login failed for {username}: user is inactive")
         return False, False
 
-    password = bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8"))
-    if user["username"] == username and password:
+    password_matches = bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8"))
+    if user["username"] == username and password_matches:
+        logger.info(f"User {username} logged in successfully")
         return True, user
     else:
+        logger.warning(f"Login failed for {username}: incorrect password")
         return False, False
 
 def display_project_list(project_manager, current_user):
@@ -77,13 +88,16 @@ def create_new_project(current_user):
     try:
         project = project_manager.create_project(title, start_date, current_user)
         console.print(f"New project created successfully with Title: {project['title']}", style="success")
+        logger.info(f"Project '{title}' created successfully by {current_user}")
     except Exception as e:
         console.print(f"Error creating project: {e}", style="danger")
+        logger.error(f"Error creating project '{title}': {e}")
 
 def profile_settings(username):
     user = user_manager.get_user(username)
     if not user:
         console.print("User not found!", style="danger")
+        logger.warning(f"Profile settings: user {username} not found")
         return
 
     console.print("Edit your profile", style="info")
@@ -111,8 +125,10 @@ def profile_settings(username):
         updates = {field: new_value}
         try:
             user_manager.update_user(username, updates)
+            logger.info(f"{field.capitalize()} updated successfully for {username}")
         except Exception as e:
             console.print(f"Error updating user: {e}", style="danger")
+            logger.error(f"Error updating {field} for {username}: {e}")
             continue
 
         console.print(f"{field} updated successfully!", style="success")
@@ -125,6 +141,7 @@ def display_project(project_title, project_manager, task_manager, current_user):
             project = project_manager.get_project(project_title)
             if not project:
                 console.print(f"Project '{project_title}' not found!", style="danger")
+                logger.warning(f"Project '{project_title}' not found")
                 return
 
             console.print(f"Project Board: [info]{project_title}[/info]")
@@ -159,6 +176,7 @@ def display_project(project_title, project_manager, task_manager, current_user):
 
             except ValueError as e:
                 console.print(f"{e}", style="danger")
+                logger.error(f"Error retrieving tasks for project '{project_title}': {e}")
                 
             member_role = project_manager.get_member_role(project_title, current_user)
             
@@ -202,8 +220,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
 
                     task_manager.add_task(project_title, task_title, task_description, task_duration, task_priority)
                     console.print(f"Task '{task_title}' added successfully!", style="success")
+                    logger.info(f"Task '{task_title}' added to project '{project_title}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while adding the task: {e}", style="danger")
+                    logger.error(f"Error adding task '{task_title}' to project '{project_title}': {e}")
             elif action == "2":
                 if member_role == "member":
                     console.print("You do not have permission to edit tasks!", style="warning")
@@ -217,8 +237,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     new_priority = Prompt.ask("Enter new priority (CRITICAL, HIGH, MEDIUM, LOW) (optional)", choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"])
                     task_manager.edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
                     console.print(f"Task '{task_title}' updated successfully!", style="success")
+                    logger.info(f"Task '{task_title}' updated in project '{project_title}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while updating the task: {e}", style="danger")
+                    logger.error(f"Error updating task '{task_title}' in project '{project_title}': {e}")
             elif action == "3":
                 if member_role == "member":
                     console.print("You do not have permission to move tasks!", style="warning")
@@ -229,8 +251,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED)", choices=["TODO", "DOING", "DONE", "ARCHIVED"])
                     task_manager.move_task(project_title, task_title, new_status)
                     console.print(f"Task '{task_title}' moved to {new_status} successfully!", style="success")
+                    logger.info(f"Task '{task_title}' moved to {new_status} in project '{project_title}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while moving the task: {e}", style="danger")
+                    logger.error(f"Error moving task '{task_title}' in project '{project_title}': {e}")
 
             elif action == "4":
                 if member_role == "member":
@@ -241,8 +265,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     task_title = Prompt.ask("Enter task title to delete")
                     task_manager.delete_task(project_title, task_title)
                     console.print(f"Task '{task_title}' deleted successfully!", style="success")
+                    logger.info(f"Task '{task_title}' deleted from project '{project_title}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while deleting the task: {e}", style="danger")
+                    logger.error(f"Error deleting task '{task_title}' from project '{project_title}': {e}")
 
             elif action == "5":
                 if member_role == "member":
@@ -268,8 +294,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                         if member_name != '0':
                             project_manager.add_member(project_title, member_name, role, project_manager)
                             console.print(f"Member '{member_name}' added successfully!", style="success")
+                            logger.info(f"Member '{member_name}' added to project '{project_title}' with role '{role}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while adding the member: {e}", style="danger")
+                    logger.error(f"Error adding member '{member_name}' to project '{project_title}': {e}")
 
             elif action == "6":
                 if member_role == "member":
@@ -290,8 +318,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     if member_name != '0':
                         project_manager.remove_member_from_project(project_title, member_name)
                         console.print(f"Member '{member_name}' removed successfully!", style="success")
+                        logger.info(f"Member '{member_name}' removed from project '{project_title}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while removing the member: {e}", style="danger")
+                    logger.error(f"Error removing member '{member_name}' from project '{project_title}': {e}")
 
             elif action == "7":
                 if member_role == "member":
@@ -312,8 +342,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     if member_name != '0':
                         task_manager.assign_member(project_title, task_title, member_name)
                         console.print(f"Member '{member_name}' assigned to task '{task_title}' successfully!", style="success")
+                        logger.info(f"Member '{member_name}' assigned to task '{task_title}' in project '{project_title}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while assigning the member: {e}", style="danger")
+                    logger.error(f"Error assigning member '{member_name}' to task '{task_title}' in project '{project_title}': {e}")
 
             elif action == "8":
                 if member_role == "member":
@@ -332,8 +364,10 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     if member_name != '0':
                         task_manager.remove_assignee_from_task(project_title, task_title, member_name)
                         console.print(f"Member '{member_name}' removed from task '{task_title}' successfully!", style="success")
+                        logger.info(f"Member '{member_name}' removed from task '{task_title}' in project '{project_title}' by {current_user}")
                 except Exception as e:
                     console.print(f"An error occurred while removing the assignee: {e}", style="danger")
+                    logger.error(f"Error removing assignee '{member_name}' from task '{task_title}' in project '{project_title}': {e}")
 
             elif action == "9":
                 try:
@@ -343,6 +377,7 @@ def display_project(project_title, project_manager, task_manager, current_user):
                             console.print(f"{name} ({role})")
                 except Exception as e:
                     console.print(f"An error occurred while viewing the members: {e}", style="danger")
+                    logger.error(f"Error viewing members in project '{project_title}': {e}")
             elif action == "10":
                 # no need to write this, but who cares
                 if member_role != "owner":
@@ -359,22 +394,26 @@ def display_project(project_title, project_manager, task_manager, current_user):
                         if sure.lower() == "yes":
                             project_manager.delete_project(project_title)
                             console.print(f"Project '{project_title}' deleted successfully!", style="success")
+                            logger.info(f"Project '{project_title}' deleted by {current_user}")
                             input("Press any key to continue...")
                             break
                     console.print("Project deletion cancelled.", style="warning")
                 except Exception as e:
                     console.print(f"An error occurred while deleting the project: {e}", style="danger")
+                    logger.error(f"Error deleting project '{project_title}': {e}")
                     
             elif action == "0":
                 break
 
             else:
                 console.print("Invalid option, please try again.", style="danger")
+                logger.warning(f"Invalid menu option selected in project '{project_title}' by {current_user}")
 
             
             input("Press any key to continue...")
     except Exception as e:
         console.print(f"An error occurred in the menu: {e}")
+        logger.error(f"Error in project '{project_title}' menu: {e}")
 
 def add_task_to_board(project_title):
     # Collect task details from the user
@@ -386,6 +425,7 @@ def add_task_to_board(project_title):
 
     # Create and add the task using the task manager
     task_manager.add_task(project_title, task_title, description, duration, priority, status)
+    logger.info(f"Task '{task_title}' added to project '{project_title}'")
     # Update the project board display
     display_project(project_title)
 
@@ -400,10 +440,11 @@ def move_task_on_board(project_title):
     console.print(task_table)
     console.print("")
 
-    task_title = Prompt.ask("Enter task Ttile to move:")
+    task_title = Prompt.ask("Enter task Title to move:")
     new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED):",choices=["TODO", "DOING", "DONE", "ARCHIVED"],)
 
     task_manager.move_task(project_title, task_title, new_status)
+    logger.info(f"Task '{task_title}' moved to {new_status} in project '{project_title}'")
 
     display_project(project_title)
 
@@ -420,8 +461,10 @@ def delete_task_from_board(project_title):
     task_title = Prompt.ask("Enter task Title to delete:")
     try:
         task_manager.delete_task(project_title, task_title)
+        logger.info(f"Task '{task_title}' deleted from project '{project_title}'")
     except ValueError as e:
         console.print(e, style="danger")
+        logger.error(f"Error deleting task '{task_title}' from project '{project_title}': {e}")
     else:
         display_project(project_title)
 
@@ -447,6 +490,7 @@ def admin_panel():
                 for user in users:
                     table.add_row(user["username"], user["email"], str(user["is_active"]), str(user["is_admin"]))
                 console.print(table)
+                logger.info("Listed all users in admin panel")
         elif choice == "2":
             clear_screen()
             console.print("List of users:")
@@ -456,13 +500,16 @@ def admin_panel():
             try:
                 user_manager.update_user(username, {"is_active": not user_manager.get_user(username)["is_active"]})
                 console.print(f"User '{username}' new status: {user_manager.get_user(username)['is_active']}", style="success")
+                logger.info(f"User '{username}' status changed to {user_manager.get_user(username)['is_active']} by admin")
             except Exception as e:
                 console.print(f"An error occurred while updating the user: {e}", style="danger")
+                logger.error(f"Error changing status of user '{username}': {e}")
         elif choice == "3":
             clear_screen()
             break
         else:
             console.print("Invalid option, please try again.", style="danger")
+            logger.warning("Invalid option selected in admin panel")
 
 def display_project_board(username):
     all_projects = project_manager.get_projects_for_user(username)
@@ -477,6 +524,7 @@ def display_project_board(username):
                 all_tasks.append(task)
     if not all_tasks:
         console.print("No tasks found!", style="warning")
+        logger.warning(f"No tasks found for user {username}")
         return
     
     table = Table(show_header=True, header_style="bold magenta")
@@ -489,9 +537,11 @@ def display_project_board(username):
     for task in all_tasks:
         table.add_row(task["title"], task["description"], task["duration"], task["priority"], task["status"], task["project"])
     console.print(table)
+    logger.info(f"Displayed project board for {username}")
 
 def main():
     console.print("Welcome to the Trellomize app!", style="success")
+    logger.info("Application started")
     while True:
         user_choice = Prompt.ask("Choose an option", choices=["login", "register", "exit"], default="login")
         is_admin = False
@@ -521,17 +571,21 @@ def main():
                 if user_manager.create_user(username=username, password=password, email=email):
                     clear_screen()
                     console.print("Registration successful!", style="info")
+                    logger.info(f"User {username} registered successfully")
                     break
                 else:
                     clear_screen()
                     console.print("Registration failed, please try again.", style="danger")
+                    logger.warning(f"Registration attempt failed for user {username}")
             elif user_choice == "exit":
                 clear_screen()
                 console.print("Exiting the app. Goodbye!", style="bold magenta")
+                logger.info("Application exited by user")
                 return
         except Exception as e:
             clear_screen()
             console.print(f"An error occurred: {e}", style="danger")
+            logger.error(f"Error during login/registration: {e}")
     main_menu(is_admin, user["username"] if user else None)
 
 def main_menu(is_admin=False, current_user=None):
@@ -567,11 +621,14 @@ def main_menu(is_admin=False, current_user=None):
                 admin_panel()
             elif choice == "0":
                 console.print("Logging Out...", style="danger")
+                logger.info(f"User {current_user} logged out")
                 break
             else:
                 console.print("Invalid option, please try again.", style="danger")
+                logger.warning(f"Invalid option selected in main menu by {current_user}")
         except Exception as e:
             console.print(f"An error occurred in the menu: {e}", style="danger")
+            logger.error(f"Error in main menu for user {current_user}: {e}")
 
 if __name__ == "__main__":
     user_manager = UserManager()
