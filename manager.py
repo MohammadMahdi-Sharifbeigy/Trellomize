@@ -218,7 +218,6 @@ class UserManager(DataManager):
             raise ValueError("User not found")
 
         self._save_data(self.user_data, self.user_filename)
-        print(f"[green]User '{username}' updated successfully![/]")
     
     def get_members(self):
         """

@@ -361,6 +361,42 @@ def delete_task_from_board(project_title):
     else:
         display_project(project_title)
 
+def admin_panel():
+    console.print("Admin Panel", style="info")
+    while True:
+        console.print("[1] List Users")
+        console.print("[2] Activate/Deactivate User")
+        console.print("[3] Go back")
+        choice = Prompt.ask("Select an option", choices=["1", "2", "3"])
+        usernames = user_manager.get_members()
+        users = [user_manager.get_user(username) for username in usernames]
+        if choice == "1":
+            if not users:
+                console.print("No users found!", style="warning")
+            else:
+                table = Table(show_header=True, header_style="bold magenta")
+                table.add_column("Username")
+                table.add_column("Email")
+                table.add_column("Is Active", justify="right")
+                table.add_column("Is Admin", justify="right")
+                for user in users:
+                    table.add_row(user["username"], user["email"], str(user["is_active"]), str(user["is_admin"]))
+                console.print(table)
+        elif choice == "2":
+            console.print("List of users:")
+            for user in users:
+                console.print(user["username"])
+            username = Prompt.ask("Enter the username to activate/deactivate")
+            try:
+                user_manager.update_user(username, {"is_active": not user_manager.get_user(username)["is_active"]})
+                console.print(f"User '{username}' new status: {user_manager.get_user(username)['is_active']}", style="success")
+            except Exception as e:
+                console.print(f"An error occurred while updating the user: {e}", style="danger")
+        elif choice == "3":
+            break
+        else:
+            console.print("Invalid option, please try again.", style="danger")
+
 def main():
     console.print("Welcome to the Trellomize app!", style="success")
     while True:
@@ -426,15 +462,16 @@ def main_menu(is_admin=False, current_user=None):
             elif choice == "3":
                 profile_settings(current_user)
             elif choice == "4":
-                project_title = Prompt.ask("Enter the project title")
-                project = project_manager.get_project(project_title)
-                if not project:
-                    console.print(f"Project with title '{project_title}' not found", style="danger")
-                    continue
+                # project_title = Prompt.ask("Enter the project title")
+                # project = project_manager.get_project(project_title)
+                # if not project:
+                #     console.print(f"Project with title '{project_title}' not found", style="danger")
+                #     continue
                 # display_project_board(project_title, project_manager, task_manager)
                 console.print("Accessing Project Board...")
             elif choice == "5" and is_admin:
-                console.print("Accessing Admin Settings...")
+                admin_panel()
+                # console.print("Accessing Admin Settings...")
             elif choice == "0":
                 console.print("Logging Out...", style="danger")
                 break
