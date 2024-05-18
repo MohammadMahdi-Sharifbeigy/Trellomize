@@ -418,7 +418,10 @@ def main():
             elif user_choice == "register":
                 username = Prompt.ask("Choose a username")
                 password = Prompt.ask("Choose a password", password=True)
-                if user_manager.create_user(username=username, password=password):
+                email = Prompt.ask("Enter your email")
+                while not "@" in email:
+                    email = Prompt.ask("Enter a valid email")
+                if user_manager.create_user(username=username, password=password, email=email):
                     clear_screen()
                     console.print("Registration successful!", style="info")
                     break
