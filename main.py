@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import re
 from datetime import date, datetime, timedelta
 
 import bcrypt
@@ -418,8 +419,12 @@ def main():
             elif user_choice == "register":
                 username = Prompt.ask("Choose a username")
                 password = Prompt.ask("Choose a password", password=True)
+                while len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
+                    password = Prompt.ask("Password must be at least 8 characters long, please try again", password=True)
+                email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
                 email = Prompt.ask("Enter your email")
-                while not "@" in email:
+                # check if email is in right email format: username@domain.extension
+                while not re.match(email_regex, email):
                     email = Prompt.ask("Enter a valid email")
                 if user_manager.create_user(username=username, password=password, email=email):
                     clear_screen()
