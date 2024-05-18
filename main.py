@@ -56,18 +56,21 @@ def display_project_list(project_manager, current_user):
             table.add_row(project["title"], project["start_date"])
         console.print(table)
 
-        # Add or remove member to project
-        while True:
-            project_title = Prompt.ask("Enter the project title, or press enter to go back")
-            if project_title == "":
-                break
-            display_project(project_title, project_manager, task_manager, current_user)
+        project_title = Prompt.ask("Enter the project title, or press enter to go back")
+        if project_title == "":
+            clear_screen()
+            return
+        display_project(project_title, project_manager, task_manager, current_user)
+        clear_screen()
 
     else:
         console.print("No projects available!", style="warning")
 
 def create_new_project(current_user):
-    title = Prompt.ask("Enter the title of the new project")
+    title = Prompt.ask("Enter the title of the new project, or press enter to go back")
+    if title == "":
+        clear_screen()
+        return
     start_date = Prompt.ask(
         "Enter the start date of the project (dd/mm/yyyy)"
     )
@@ -347,9 +350,18 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     input("Press any key to continue...")
                     continue
                 try:
-                    project_manager.delete_project(project_title)
-                    console.print(f"Project '{project_title}' deleted successfully!", style="success")
-                    break
+                    sure = Prompt.ask("Are you sure you want to delete the project? (yes/no)")
+                    if sure.lower() != "yes":
+                        console.print("Project deletion cancelled.", style="warning")
+                        break
+                    else:
+                        sure = Prompt.ask("Are you really sure you want to delete the project? (yes/no)")
+                        if sure.lower() == "yes":
+                            project_manager.delete_project(project_title)
+                            console.print(f"Project '{project_title}' deleted successfully!", style="success")
+                            input("Press any key to continue...")
+                            break
+                    console.print("Project deletion cancelled.", style="warning")
                 except Exception as e:
                     console.print(f"An error occurred while deleting the project: {e}", style="danger")
                     
@@ -360,7 +372,7 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 console.print("Invalid option, please try again.", style="danger")
 
             
-            Prompt.ask("Press any key to continue...")
+            input("Press any key to continue...")
     except Exception as e:
         console.print(f"An error occurred in the menu: {e}")
 
@@ -423,6 +435,7 @@ def admin_panel():
         usernames = user_manager.get_members()
         users = [user_manager.get_user(username) for username in usernames]
         if choice == "1":
+            clear_screen()
             if not users:
                 console.print("No users found!", style="warning")
             else:
@@ -435,6 +448,7 @@ def admin_panel():
                     table.add_row(user["username"], user["email"], str(user["is_active"]), str(user["is_admin"]))
                 console.print(table)
         elif choice == "2":
+            clear_screen()
             console.print("List of users:")
             for user in users:
                 console.print(user["username"])
@@ -445,6 +459,7 @@ def admin_panel():
             except Exception as e:
                 console.print(f"An error occurred while updating the user: {e}", style="danger")
         elif choice == "3":
+            clear_screen()
             break
         else:
             console.print("Invalid option, please try again.", style="danger")
