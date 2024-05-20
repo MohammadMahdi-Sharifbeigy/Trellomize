@@ -25,13 +25,16 @@ def login(username, password):
     else:
         return False, None
 
+def logout():
+    st.session_state.clear()
+    st.session_state['page'] = 'login'
+
 def display_project_list(current_user):
     user = user_manager.get_user(current_user)
     if user["is_admin"]:
         projects = project_manager.list_projects()
     else:
         projects = project_manager.get_projects_for_user(current_user)
-
 
     st.header("Project List")
     if projects:
@@ -40,12 +43,14 @@ def display_project_list(current_user):
         
         st.table(rows)
         for row in rows:
-            st.write(f"**Title**: {row[0]}, **Start Date**: {row[1]}")
             if st.button(f"Open {row[0]}"):
                 st.session_state['current_project'] = row[0]
                 st.session_state['page'] = 'project_detail'
     else:
         st.write("No projects available!")
+
+    if st.button("Back to Main Menu"):
+        st.session_state['page'] = 'main_menu'
 
 def create_new_project(current_user):
     st.header("Create New Project")
@@ -54,11 +59,14 @@ def create_new_project(current_user):
     if st.button("Create"):
         handle_create_project(title, start_date.strftime("%d/%m/%Y"), current_user)
 
+    if st.button("Back to Main Menu"):
+        st.session_state['page'] = 'main_menu'
+
 def handle_create_project(title, start_date, current_user):
     try:
         project = project_manager.create_project(title, start_date, current_user)
         st.success(f"New project created successfully with Title: {project['title']}")
-        st.session_state['page'] = 'project_list'  # Redirect to project list after creation
+        st.session_state['page'] = 'project_list'
     except Exception as e:
         st.error(f"Error creating project: {e}")
 
@@ -73,6 +81,9 @@ def profile_settings(username):
     email = st.text_input("New email")
     if st.button("Update"):
         handle_update_profile(username, password, email)
+
+    if st.button("Back to Main Menu"):
+        st.session_state['page'] = 'main_menu'
 
 def handle_update_profile(username, password, email):
     updates = {}
@@ -116,6 +127,9 @@ def display_project(project_title):
         st.session_state['page'] = 'delete_task'
         st.session_state['current_project'] = project_title
 
+    if st.button("Back to Project List"):
+        st.session_state['page'] = 'project_list'
+
 def add_task(project_title):
     st.header("Add Task")
     title = st.text_input("Task Title")
@@ -124,6 +138,9 @@ def add_task(project_title):
     priority = st.selectbox("Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"])
     if st.button("Add"):
         handle_add_task(project_title, title, description, duration, priority)
+
+    if st.button("Back to Project"):
+        st.session_state['page'] = 'project_detail'
 
 def handle_add_task(project_title, title, description, duration, priority):
     try:
@@ -143,6 +160,9 @@ def edit_task(project_title):
     if st.button("Update"):
         handle_edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
 
+    if st.button("Back to Project"):
+        st.session_state['page'] = 'project_detail'
+
 def handle_edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority):
     try:
         task_manager.edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
@@ -158,6 +178,9 @@ def move_task(project_title):
     if st.button("Move"):
         handle_move_task(project_title, task_title, new_status)
 
+    if st.button("Back to Project"):
+        st.session_state['page'] = 'project_detail'
+
 def handle_move_task(project_title, task_title, new_status):
     try:
         task_manager.move_task(project_title, task_title, new_status)
@@ -171,6 +194,9 @@ def delete_task(project_title):
     task_title = st.text_input("Task Title to Delete")
     if st.button("Delete"):
         handle_delete_task(project_title, task_title)
+
+    if st.button("Back to Project"):
+        st.session_state['page'] = 'project_detail'
 
 def handle_delete_task(project_title, task_title):
     try:
@@ -193,6 +219,9 @@ def admin_panel():
             rows.append([user_data["username"], user_data["email"], str(user_data["is_active"]), str(user_data["is_admin"])])
         st.table(rows)
 
+    if st.button("Back to Main Menu"):
+        st.session_state['page'] = 'main_menu'
+
 def main():
     st.title("Welcome to the Trellomize app!")
     if 'page' not in st.session_state:
@@ -203,6 +232,8 @@ def main():
         register_dialog()
     elif st.session_state['page'] == 'main_menu':
         main_menu()
+    elif st.session_state['page'] == 'project_list':
+        display_project_list(st.session_state['username'])
     elif st.session_state['page'] == 'project_detail':
         display_project(st.session_state['current_project'])
     elif st.session_state['page'] == 'add_task':
@@ -248,8 +279,7 @@ def main_menu():
     st.button("Profile Settings", on_click=lambda: profile_settings(st.session_state['username']))
     if st.session_state.get('is_admin', False):
         st.button("Admin Panel", on_click=lambda: admin_panel())
-    st.button("Log Out", on_click=lambda: login_dialog())
-
+    st.button("Log Out", on_click=lambda: logout())
 
 if __name__ == "__main__":
     main()
