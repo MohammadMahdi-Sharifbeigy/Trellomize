@@ -515,7 +515,11 @@ if __name__ == "__main__":
     if args.command == "create-user":
         user_manager.create_user(args.username, args.password, args.is_active, args.email, True)
     elif args.command == "purge-data":
-        data_manager.purge_data(input("[bold red]Are you sure you want to erase all data? (y/n): "))
+        confirmation = input("[bold red]Are you sure you want to erase all data? (y/n): ")
+        if confirmation.lower() == 'y':
+            data_manager.purge_data()
+        else:
+            print("Data purge cancelled.")
     elif args.command == "create-project":
         project_manager.create_project(args.title, args.start_date)
     elif args.command == "add-member":
