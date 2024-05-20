@@ -1,9 +1,8 @@
+import bcrypt
 import json
 import os
 import re
-from datetime import date, datetime, timedelta
-
-import bcrypt
+from datetime import datetime, date, timedelta
 import streamlit as st
 from manager import ProjectManager, TaskManager, UserManager
 
@@ -33,15 +32,13 @@ def display_project_list(current_user):
     else:
         projects = project_manager.get_projects_for_user(current_user)
 
-    st.write(f"Projects for user {current_user}: {projects}")  # Debugging line
 
     st.header("Project List")
     if projects:
         columns = ["Title", "Start Date"]
         rows = [[project["title"], project["start_date"]] for project in projects]
         
-        st.write(f"Table columns: {columns}, rows: {rows}")  # Debugging line
-
+        st.table(rows)
         for row in rows:
             st.write(f"**Title**: {row[0]}, **Start Date**: {row[1]}")
             if st.button(f"Open {row[0]}"):
@@ -61,6 +58,7 @@ def handle_create_project(title, start_date, current_user):
     try:
         project = project_manager.create_project(title, start_date, current_user)
         st.success(f"New project created successfully with Title: {project['title']}")
+        st.session_state['page'] = 'project_list'  # Redirect to project list after creation
     except Exception as e:
         st.error(f"Error creating project: {e}")
 
@@ -245,13 +243,13 @@ def register_dialog():
 
 def main_menu():
     st.header("Main Menu")
-    st.button("Project List", on_click=lambda: st.session_state.update({'page': 'project_list'}))
-    st.button("Create New Project", on_click=lambda: st.session_state.update({'page': 'create_project'}))
-    st.button("Profile Settings", on_click=lambda: st.session_state.update({'page': 'profile_settings'}))
+    st.button("Project List", on_click=lambda: display_project_list(st.session_state['username']))
+    st.button("Create New Project", on_click=lambda: create_new_project(st.session_state['username']))
+    st.button("Profile Settings", on_click=lambda: profile_settings(st.session_state['username']))
     if st.session_state.get('is_admin', False):
-        st.button("Admin Panel", on_click=lambda: st.session_state.update({'page': 'admin_panel'}))
-    st.button("Log Out", on_click=lambda: st.session_state.update({'page': 'login'}))
+        st.button("Admin Panel", on_click=lambda: admin_panel())
+    st.button("Log Out", on_click=lambda: login_dialog())
+
 
 if __name__ == "__main__":
     main()
-
