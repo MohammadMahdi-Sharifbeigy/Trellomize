@@ -100,35 +100,110 @@ def handle_update_profile(username, password, email):
 
 def display_project(project_title):
     project = project_manager.get_project(project_title)
+
     if not project:
         st.error(f"Project '{project_title}' not found!")
         return
 
     st.header(f"Project: {project_title}")
-    if st.button("Add Task"):
+
+    with open("index.html", "r") as f:
+        html_code = f.read()
+
+    with open("style.css", "r") as f:
+        css_code = f.read()
+
+    with open("script.js", "r") as f:
+        js_code = f.read()
+
+    st.markdown(html_code, unsafe_allow_html=True)
+    st.markdown(f'<style>{css_code}</style>', unsafe_allow_html=True)
+    st.markdown(f'<script>{js_code}</script>', unsafe_allow_html=True)
+
+    status_columns = {
+        "TODO": [],
+        "DOING": [],
+        "DONE": [],
+        "ARCHIVED": []
+    }
+
+    for status, tasks in project["tasks"].items():
+        for task in tasks:
+            task_info = {
+                "title": task['title'],
+                "assignees": ", ".join(task.get('assignees', [])),
+                "priority": task['priority'],
+                "end_date": task['end_date']
+            }
+            status_columns[status].append(task_info)
+
+    columns = st.columns(len(status_columns))
+    for idx, (status, tasks) in enumerate(status_columns.items()):
+        with columns[idx]:
+            st.subheader(status)
+            st.markdown(f'<div class="status-column" ondrop="drop(event, \'{status}\')" ondragover="allowDrop(event)"><div class="dropzone">', unsafe_allow_html=True)
+            for task_info in tasks:
+                task_id = f"task_{status.lower()}_{task_info['title'].replace(' ', '_')}"
+                task_html = f"""
+                <div id="{task_id}" class="task-box" draggable="true" ondragstart="drag(event)" onclick="showTaskOptions('{task_id}')">
+                    <strong>{task_info['title']}</strong><br>
+                    <em>Assignees: {task_info['assignees']}</em><br>
+                    Priority: {task_info['priority']}<br>
+                    Due Date: {task_info['end_date']}
+                </div>
+                """
+                st.markdown(task_html, unsafe_allow_html=True)
+            st.markdown('</div></div>', unsafe_allow_html=True)
+
+            for task_info in tasks:
+                if st.button(f"Details: {task_info['title']}", key=f"details_{task_info['title'].replace(' ', '_')}"):
+                    st.session_state['popup_task'] = task_info
+                    st.session_state['show_popup'] = True
+
+    if st.session_state.get('show_popup', False):
+        task = st.session_state['popup_task']
+        st.markdown(f"<h2>{task['title']}</h2>", unsafe_allow_html=True)
+        st.write(f"**Priority:** {task['priority']}")
+        st.write(f"**Assignees:** {task['assignees']}")
+        st.write(f"**Due Date:** {task['end_date']}")
+        st.write(f"**Description:** {task.get('description', '')}")
+
+        if st.button("Edit", key=f"edit_{task['title']}"):
+            st.session_state['current_task'] = task['title']
+            st.session_state['current_project'] = project_title
+            st.session_state['page'] = 'edit_task'
+            st.experimental_rerun()
+
+        if st.button("Move", key=f"move_{task['title']}"):
+            st.session_state['current_task'] = task['title']
+            st.session_state['current_project'] = project_title
+            st.session_state['page'] = 'move_task'
+            st.experimental_rerun()
+
+        if st.button("Delete", key=f"delete_{task['title']}"):
+            if st.button("Confirm", key=f"confirm_delete_{task['title']}"):
+                st.session_state['current_task'] = task['title']
+                st.session_state['page'] = 'delete_task'
+                st.session_state['current_project'] = project_title
+
+        if st.button("Close", key=f"close_{task['title']}"):
+            st.session_state['show_popup'] = False
+            st.experimental_rerun()
+
+    st.sidebar.header("Project Actions")
+    if st.sidebar.button("Add Task", key="add_task"):
         st.session_state['page'] = 'add_task'
         st.session_state['current_project'] = project_title
 
-    columns = ["Title", "Assignee", "Priority", "Due Date"]
-    rows = []
-    for status, task_list in project["tasks"].items():
-        for task in task_list:
-            assignees = ", ".join(task.get("assignees", []))
-            rows.append([task["title"], assignees, task["priority"], task["end_date"]])
-
-    st.table(rows)
-
-    if st.button("Edit Task"):
-        st.session_state['page'] = 'edit_task'
+    if st.sidebar.button("Manage Members", key="manage_members"):
+        st.session_state['page'] = 'manage_members'
         st.session_state['current_project'] = project_title
-    if st.button("Move Task"):
-        st.session_state['page'] = 'move_task'
-        st.session_state['current_project'] = project_title
-    if st.button("Delete Task"):
-        st.session_state['page'] = 'delete_task'
+        
+    if st.sidebar.button("Manage Assignees", key="manage_assignees"):
+        st.session_state['page'] = 'manage_assignees'
         st.session_state['current_project'] = project_title
 
-    if st.button("Back to Project List"):
+    if st.sidebar.button("Back to Project List", key="back_to_project_list"):
         st.session_state['page'] = 'project_list'
 
 def add_task(project_title):
@@ -137,15 +212,16 @@ def add_task(project_title):
     description = st.text_input("Task Description")
     duration = st.number_input("Task Duration (days)", min_value=1)
     priority = st.selectbox("Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"])
+    status = st.selectbox("status", ["TO DO", "DOING", "DONE", "ARCHIVED"])
     if st.button("Add"):
-        handle_add_task(project_title, title, description, duration, priority)
+        handle_add_task(project_title, title, description, duration, priority, status)
 
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
 
-def handle_add_task(project_title, title, description, duration, priority):
+def handle_add_task(project_title, title, description, duration, priority, status):
     try:
-        task_manager.add_task(project_title, title, description, duration, priority)
+        task_manager.add_task(project_title, title, description, duration, priority,status)
         st.success(f"Task '{title}' added successfully")
         st.session_state['page'] = 'project_detail'
     except Exception as e:
@@ -249,7 +325,7 @@ def register_dialog():
             st.session_state['page'] = 'login'
         else:
             st.error("Registration failed, please try again.")
-
+            
 def manage_members(project_title):
     project = project_manager.get_project(project_title)
     if not project:
@@ -296,6 +372,55 @@ def handle_remove_member(project_title, username):
         st.experimental_rerun()
     except Exception as e:
         st.error(f"Error removing member from project: {e}")
+
+def manage_assignees(project_title, task_title=None):
+    if task_title is None:
+        task_title = st.session_state.get('current_task')
+    if not task_title:
+        st.error("Task not specified!")
+        return
+
+    task = task_manager.get_task(project_title, task_title)
+    if not task:
+        st.error(f"Task '{task_title}' not found in project '{project_title}'!")
+        return
+
+    st.header(f"Manage Assignees for Task: {task_title}")
+    assignees = task.get("assignees", [])
+    all_users = user_manager.get_members()
+
+    st.subheader("Current Assignees")
+    st.write(", ".join(assignees))
+
+    st.subheader("Add Assignee")
+    user_to_add = st.selectbox("Select User to Add", [user["username"] for user in all_users if user["username"] not in assignees])
+    if st.button("Add Assignee"):
+        handle_add_assignee(project_title, task_title, user_to_add)
+
+    st.subheader("Remove Assignee")
+    user_to_remove = st.selectbox("Select Assignee to Remove", [user for user in assignees])
+    if st.button("Remove Assignee"):
+        handle_remove_assignee(project_title, task_title, user_to_remove)
+
+    if st.button("Back to Task"):
+        st.session_state['page'] = 'project_detail'
+
+def handle_add_assignee(project_title, task_title, username):
+    try:
+        task_manager.assign_member(project_title, task_title, username)
+        st.success(f"User '{username}' assigned to task '{task_title}' successfully")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error assigning user to task: {e}")
+
+def handle_remove_assignee(project_title, task_title, username):
+    try:
+        task_manager.remove_assignee_from_task(project_title, task_title, username)
+        st.success(f"User '{username}' removed from task '{task_title}' successfully")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error removing user from task: {e}")
+
 
 def manage_assignees(project_title, task_title):
     task = task_manager.get_task(project_title, task_title)
