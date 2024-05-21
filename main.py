@@ -42,10 +42,11 @@ def display_project_list(current_user):
         rows = [[project["title"], project["start_date"]] for project in projects]
         
         st.table(rows)
-        for row in rows:
-            if st.button(f"Open {row[0]}"):
+        for index, row in enumerate(rows):
+            if st.button(f"Open {row[0]}", key=f"open_{index}"):
                 st.session_state['current_project'] = row[0]
                 st.session_state['page'] = 'project_detail'
+                st.experimental_rerun()  # Rerun the app to apply the changes to session state
     else:
         st.write("No projects available!")
 
@@ -222,29 +223,6 @@ def admin_panel():
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
 
-def main():
-    st.title("Welcome to the Trellomize app!")
-    if 'page' not in st.session_state:
-        st.session_state['page'] = 'login'
-    if st.session_state['page'] == 'login':
-        login_dialog()
-    elif st.session_state['page'] == 'register':
-        register_dialog()
-    elif st.session_state['page'] == 'main_menu':
-        main_menu()
-    elif st.session_state['page'] == 'project_list':
-        display_project_list(st.session_state['username'])
-    elif st.session_state['page'] == 'project_detail':
-        display_project(st.session_state['current_project'])
-    elif st.session_state['page'] == 'add_task':
-        add_task(st.session_state['current_project'])
-    elif st.session_state['page'] == 'edit_task':
-        edit_task(st.session_state['current_project'])
-    elif st.session_state['page'] == 'move_task':
-        move_task(st.session_state['current_project'])
-    elif st.session_state['page'] == 'delete_task':
-        delete_task(st.session_state['current_project'])
-
 def login_dialog():
     st.header("Login")
     username = st.text_input("Enter your username")
@@ -274,12 +252,46 @@ def register_dialog():
 
 def main_menu():
     st.header("Main Menu")
-    st.button("Project List", on_click=lambda: display_project_list(st.session_state['username']))
-    st.button("Create New Project", on_click=lambda: create_new_project(st.session_state['username']))
-    st.button("Profile Settings", on_click=lambda: profile_settings(st.session_state['username']))
+    if st.button("Project List"):
+        st.session_state['page'] = 'project_list'
+    if st.button("Create New Project"):
+        st.session_state['page'] = 'create_project'
+    if st.button("Profile Settings"):
+        st.session_state['page'] = 'profile_settings'
     if st.session_state.get('is_admin', False):
-        st.button("Admin Panel", on_click=lambda: admin_panel())
-    st.button("Log Out", on_click=lambda: logout())
+        if st.button("Admin Panel"):
+            st.session_state['page'] = 'admin_panel'
+    if st.button("Log Out"):
+        logout()
+
+def main():
+    st.title("Welcome to the Trellomize app!")
+    if 'page' not in st.session_state:
+        st.session_state['page'] = 'login'
+    if st.session_state['page'] == 'login':
+        login_dialog()
+    elif st.session_state['page'] == 'register':
+        register_dialog()
+    elif st.session_state['page'] == 'main_menu':
+        main_menu()
+    elif st.session_state['page'] == 'project_list':
+        display_project_list(st.session_state['username'])
+    elif st.session_state['page'] == 'project_detail':
+        display_project(st.session_state['current_project'])
+    elif st.session_state['page'] == 'create_project':
+        create_new_project(st.session_state['username'])
+    elif st.session_state['page'] == 'add_task':
+        add_task(st.session_state['current_project'])
+    elif st.session_state['page'] == 'edit_task':
+        edit_task(st.session_state['current_project'])
+    elif st.session_state['page'] == 'move_task':
+        move_task(st.session_state['current_project'])
+    elif st.session_state['page'] == 'delete_task':
+        delete_task(st.session_state['current_project'])
+    elif st.session_state['page'] == 'profile_settings':
+        profile_settings(st.session_state['username'])
+    elif st.session_state['page'] == 'admin_panel':
+        admin_panel()
 
 if __name__ == "__main__":
     main()
