@@ -250,6 +250,95 @@ def register_dialog():
         else:
             st.error("Registration failed, please try again.")
 
+def manage_members(project_title):
+    project = project_manager.get_project(project_title)
+    if not project:
+        st.error(f"Project '{project_title}' not found!")
+        return
+
+    st.header(f"Manage Members for Project: {project_title}")
+    members = project.get("members", [])
+    all_users = user_manager.get_members()
+
+    member_columns = ["Username", "Role"]
+    member_rows = [[list(member.keys())[0], list(member.values())[0]] for member in members]
+    all_user_rows = [[user["username"], ""] for user in all_users if {user["username"]: "viewer"} not in members]
+
+    st.subheader("Current Members")
+    st.table(member_rows)
+
+    st.subheader("Add Member")
+    user_to_add = st.selectbox("Select User to Add", [user["username"] for user in all_users if {user["username"]: "viewer"} not in members])
+    role_to_add = st.selectbox("Select Role", ["viewer", "editor", "admin"])
+    if st.button("Add Member"):
+        handle_add_member(project_title, user_to_add, role_to_add)
+
+    st.subheader("Remove Member")
+    user_to_remove = st.selectbox("Select Member to Remove", [list(member.keys())[0] for member in members])
+    if st.button("Remove Member"):
+        handle_remove_member(project_title, user_to_remove)
+
+    if st.button("Back to Project"):
+        st.session_state['page'] = 'project_detail'
+
+def handle_add_member(project_title, username, role):
+    try:
+        project_manager.add_member(project_title, username, role)
+        st.success(f"User '{username}' added to project '{project_title}' successfully")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error adding member to project: {e}")
+
+def handle_remove_member(project_title, username):
+    try:
+        project_manager.remove_member_from_project(project_title, username)
+        st.success(f"User '{username}' removed from project '{project_title}' successfully")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error removing member from project: {e}")
+
+def manage_assignees(project_title, task_title):
+    task = task_manager.get_task(project_title, task_title)
+    if not task:
+        st.error(f"Task '{task_title}' not found in project '{project_title}'!")
+        return
+
+    st.header(f"Manage Assignees for Task: {task_title}")
+    assignees = task.get("assignees", [])
+    all_users = user_manager.get_members()
+
+    st.subheader("Current Assignees")
+    st.write(", ".join(assignees))
+
+    st.subheader("Add Assignee")
+    user_to_add = st.selectbox("Select User to Add", [user["username"] for user in all_users if user["username"] not in assignees])
+    if st.button("Add Assignee"):
+        handle_add_assignee(project_title, task_title, user_to_add)
+
+    st.subheader("Remove Assignee")
+    user_to_remove = st.selectbox("Select Assignee to Remove", [user for user in assignees])
+    if st.button("Remove Assignee"):
+        handle_remove_assignee(project_title, task_title, user_to_remove)
+
+    if st.button("Back to Task"):
+        st.session_state['page'] = 'project_detail'
+
+def handle_add_assignee(project_title, task_title, username):
+    try:
+        task_manager.assign_member(project_title, task_title, username)
+        st.success(f"User '{username}' assigned to task '{task_title}' successfully")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error assigning user to task: {e}")
+
+def handle_remove_assignee(project_title, task_title, username):
+    try:
+        task_manager.remove_assignee_from_task(project_title, task_title, username)
+        st.success(f"User '{username}' removed from task '{task_title}' successfully")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error removing user from task: {e}")
+
 def main_menu():
     st.header("Main Menu")
     if st.button("Project List"):
@@ -292,6 +381,10 @@ def main():
         profile_settings(st.session_state['username'])
     elif st.session_state['page'] == 'admin_panel':
         admin_panel()
+    elif st.session_state['page'] == 'manage_members':
+        manage_members(st.session_state['current_project'])
+    elif st.session_state['page'] == 'manage_assignees':
+        manage_assignees(st.session_state['current_project'], st.session_state['current_task'])
 
 if __name__ == "__main__":
     main()
