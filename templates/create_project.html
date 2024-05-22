@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trellomize - Project Management App</title>
-    <link rel="stylesheet" href="\static\styles.css" />
+    <link rel="stylesheet" href="/static/styles.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -13,12 +13,6 @@
     />
   </head>
   <body>
-    <div class="dark-mode-toggle">
-      <input type="checkbox" id="dark-mode-toggle" />
-      <label for="dark-mode-toggle">
-        <i class="fas fa-moon"></i>
-      </label>
-    </div>
     <div class="container">
       <h1>Create New Project</h1>
       <form action="{{ url_for('create_project_route') }}" method="post">
@@ -29,12 +23,28 @@
         <input type="submit" value="Create" />
       </form>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
     <script>
-      document
-        .getElementById("dark-mode-toggle")
-        .addEventListener("change", function () {
-          document.body.classList.toggle("dark-mode");
-        });
+      function addDarkmodeWidget() {
+        new Darkmode().showWidget();
+      }
+      window.addEventListener('load', addDarkmodeWidget);
+      const options = {
+        bottom: '64px', 
+        right: 'unset', 
+        left: '32px', 
+        time: '0.5s', 
+        mixColor: '#fff', 
+        backgroundColor: '#fff', 
+        buttonColorDark: '#100f2c',  
+        buttonColorLight: '#fff', 
+        saveInCookies: false, 
+        label: '🌓',
+        autoMatchOsTheme: true
+      }
+
+      const darkmode = new Darkmode(options);
+      darkmode.showWidget();
     </script>
   </body>
 </html>

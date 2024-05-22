@@ -1,35 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trellomize - Project Management App</title>
-    <link rel="stylesheet" href="\static\styles.css">
+    <link rel="stylesheet" href="/static/styles.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
       integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMt23cez/3paNdF+N8FkVSm7K4U5xFe5R6oRfrv"
       crossorigin="anonymous"
     />
-</head>
-<body>
-    <div class="dark-mode-toggle">
-        <input type="checkbox" id="dark-mode-toggle">
-        <label for="dark-mode-toggle">
-            <i class="fas fa-moon"></i>
-        </label>
-    </div>
-    
+  </head>
+  <body>
     <div class="container">
-        <h1>Welcome to Trellomize</h1>
-        <p>This is a project management app where you can manage your projects efficiently.</p>
-        <p><a href="{{ url_for('login') }}">login</a><a href="{{ url_for('sign_up') }}">sign up</a></p>
+      <h1>Welcome to Trellomize</h1>
+      <p>
+        This is a project management app where you can manage your projects
+        efficiently.
+      </p>
+      <p>
+        <a href="{{ url_for('login') }}">login</a
+        ><a href="{{ url_for('sign_up') }}">sign up</a>
+      </p>
     </div>
-    
+    <script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
     <script>
-        document.getElementById('dark-mode-toggle').addEventListener('change', function () {
-            document.body.classList.toggle('dark-mode');
-        });
+      function addDarkmodeWidget() {
+        new Darkmode().showWidget();
+      }
+      window.addEventListener("load", addDarkmodeWidget);
+      const options = {
+        bottom: "64px",
+        right: "unset",
+        left: "32px",
+        time: "0.5s",
+        mixColor: "#fff",
+        backgroundColor: "#fff",
+        buttonColorDark: "#100f2c",
+        buttonColorLight: "#fff",
+        saveInCookies: false,
+        label: "🌓",
+        autoMatchOsTheme: true,
+      };
+
+      const darkmode = new Darkmode(options);
+      darkmode.showWidget();
     </script>
-</body>
+  </body>
 </html>

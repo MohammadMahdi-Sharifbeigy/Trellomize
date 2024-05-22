@@ -1,10 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import json
 import bcrypt
 import os
 from manager import ProjectManager, TaskManager, UserManager
+import hashlib
+import secrets
+
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+def generate_token():
+    return secrets.token_urlsafe(16)
 
 def create_json_files():
     if not os.path.exists("users.json"):
@@ -79,8 +85,7 @@ def profile_settings(username):
         console.print(f"{field} updated successfully!", style="success")
 
 def add_task_to_board(project_title, task_title, description, duration, priority):
-    status = "TODO"  # Default status for new tasks
-    # Create and add the task using the task manager
+    status = "TODO" 
     task_manager.add_task(project_title, task_title, description, duration, priority, status)
 
 def move_task_on_board(project_title, task_title, new_status):
@@ -95,22 +100,98 @@ def delete_task_from_board(project_title, task_title):
     except ValueError as e:
         console.print(e, style="danger")
 
+def send_password_reset_email(email, token):
+    """
+    Sends a password reset email to the provided email address with a unique token.
+
+    Args:
+        email (str): The email address to send the password reset email to.
+        token (str): The unique token to be included in the email for password reset.
+    """
+
+    subject = "Password Reset Request"
+    body = f"""
+    Dear user,
+
+    You recently requested to reset your password for your account.
+
+    Please click on the following link to reset your password:
+
+    {url_for('reset_password', token=token, _external=True)}
+
+    This link will expire in 24 hours.
+
+    If you did not request a password reset, please ignore this email.
+
+    Sincerely,
+    The Task Management App Team
+    """
+    print(f"Sending password reset email to {email} with subject: {subject}")
+    print(f"Email body: {body}")
+    print("Note: This is a simulated email sending process for demonstration purposes only.")
+
+
 # Routes
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('login_register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if login_user(username, password):  # Call the renamed function
+        if login_user(username, password): 
             return redirect(url_for('projects'))
         else:
-            return render_template('login.html', error='Invalid username or password')
+            return render_template('login_register.html', error='Invalid username or password')
     else:
-        return render_template('login.html')
+        return render_template('login_register.html')
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        with open("users.json") as f:
+            users = json.load(f)["users"]
+        
+        user = next((user for user in users if user["email"] == email), None)
+        if user:
+            token = generate_token()
+            user['reset_token'] = hashlib.sha256(token.encode()).hexdigest()
+            with open("users.json", "w") as f:
+                json.dump({"users": users}, f, indent=4)
+            send_password_reset_email(user['email'], token)
+            flash('An email has been sent with instructions to reset your password.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Email address not found.', 'error')
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    hashed_token = hashlib.sha256(token.encode()).hexdigest()
+    with open("users.json") as f:
+        users = json.load(f)["users"]
+    
+    user = next((user for user in users if user.get("reset_token") == hashed_token), None)
+    if not user:
+        flash('Invalid or expired token.', 'error')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        if password == confirm_password:
+            user['password'] = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            user['reset_token'] = None
+            with open("users.json", "w") as f:
+                json.dump({"users": users}, f, indent=4)
+            flash('Your password has been reset successfully.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Passwords do not match.', 'error')
+    return render_template('reset_password.html', token=token)
 
 @app.route('/logout')
 def logout_route():
@@ -128,7 +209,7 @@ def sign_up():
             users_data = json.load(f)
             usernames = [user['username'] for user in users_data['users']]
             if username in usernames:
-                return render_template('signup.html', error="Username already exists")
+                return render_template('login_register.html', error="Username already exists")
         # Hash password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         # Save user data
@@ -139,7 +220,7 @@ def sign_up():
         session['username'] = username
         return redirect(url_for('projects'))
     else:
-        return render_template('signup.html')
+        return render_template('login_register.html')
 
 @app.route('/projects')
 def projects():
