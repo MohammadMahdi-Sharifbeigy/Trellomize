@@ -21,7 +21,7 @@
         <input type="text" id="task_title" name="task_title" required />
         <br />
         <label for="description">Description:</label>
-        <textarea id="description" name="description" required></textarea>
+        <textarea id="description" name="description" ></textarea>
         <br />
         <label for="duration">Duration (days):</label>
         <input type="number" id="duration" name="duration" required />
@@ -32,6 +32,14 @@
           <option value="Medium">Medium</option>
           <option value="High">High</option>
           <option value="Critical">Critical</option>
+        </select>
+        <br />
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+          <option value="TODO">Todo</option>
+          <option value="DONE">Done</option>
+          <option value="DOING">Doing</option>
+          <option value="ARCHIVED">Archived</option>
         </select>
         <br />
         <button type="submit">Create Task</button>
@@ -49,7 +57,8 @@
           </div>
           <div class="task-details">
             <div class="task-description">{{ task.description }}</div>
-            <div class="task-duration">{{ task.duration }} days</div>
+            <div cladd="task-start">{{task.start_date}}</div>
+            <div cladd="task-end">{{task.end_date}}</div>
             <div class="task-assignees">
               {% for assignee in task.assignees %}
               <span class="assignee">{{ assignee }}</span>
@@ -62,7 +71,7 @@
 
       <div class="task-list">
         <h3>Doing</h3>
-        {% for task in tasks.DOIN %}
+        {% for task in tasks.DOING %}
         <div class="task-card">
           <div class="task-header">
             <div class="task-title">{{ task.title }}</div>
@@ -70,7 +79,8 @@
           </div>
           <div class="task-details">
             <div class="task-description">{{ task.description }}</div>
-            <div class="task-duration">{{ task.duration }} days</div>
+            <div cladd="task-start">{{task.start_date}}</div>
+            <div cladd="task-end">{{task.end_date}}</div>
             <div class="task-assignees">
               {% for assignee in task.assignees %}
               <span class="assignee">{{ assignee }}</span>
@@ -91,7 +101,8 @@
           </div>
           <div class="task-details">
             <div class="task-description">{{ task.description }}</div>
-            <div class="task-duration">{{ task.duration }} days</div>
+            <div cladd="task-start">{{task.start_date}}</div>
+            <div cladd="task-end">{{task.end_date}}</div>
             <div class="task-assignees">
               {% for assignee in task.assignees %}
               <span class="assignee">{{ assignee }}</span>
@@ -112,7 +123,8 @@
           </div>
           <div class="task-details">
             <div class="task-description">{{ task.description }}</div>
-            <div class="task-duration">{{ task.duration }} days</div>
+            <div cladd="task-start">{{task.start_date}}</div>
+            <div cladd="task-end">{{task.end_date}}</div>
             <div class="task-assignees">
               {% for assignee in task.assignees %}
               <span class="assignee">{{ assignee }}</span>
@@ -160,11 +172,19 @@
       <!-- Add Member form -->
       <h2>Add Member to Project</h2>
       <form method="post">
-        <label for="member_username">Member Username:</label>
+        <label for="add_memebr">Member Username:</label>
         <input
           type="text"
           id="member_username"
           name="member_username"
+          required
+        />
+        <br />
+        <label for="add_memeber">Member Role:</label>
+        <input
+          type="text"
+          id="member_role"
+          name="member_role"
           required
         />
         <br />
@@ -258,7 +278,7 @@
       backgroundColor: '#fff', 
       buttonColorDark: '#100f2c',  
       buttonColorLight: '#fff', 
-      saveInCookies: false, 
+      saveInCookies: true, 
       label: '🌓',
       autoMatchOsTheme: true
     }

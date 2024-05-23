@@ -218,7 +218,6 @@ class UserManager(DataManager):
             raise ValueError("User not found")
 
         self._save_data(self.user_data, self.user_filename)
-        print(f"[green]User '{username}' updated successfully![/]")
     
     def get_members(self):
         """
@@ -251,7 +250,7 @@ class ProjectManager(DataManager):
             "title": title,
             "start_date": datetime.strptime(start_date, "%d/%m/%Y").strftime("%Y-%m-%d"),
             "owner": owner,
-            "members": [owner],
+            "members": [{owner: "owner"}],
             "tasks": {"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []},
         }
         self.data.setdefault("projects", []).append(project)
@@ -269,12 +268,15 @@ class ProjectManager(DataManager):
 
         return project["owner"] == username
 
-    def get_project(self, project_title):
-        with open("data.json", "r") as f:
-            projects = json.load(f)["projects"]
-        project = next((proj for proj in projects if proj["title"] == project_title), None)
-        return project
-
+    def get_project(self, title):
+        """
+        Retrieves a project by its title.
+        """
+        self.reload_data()
+        for project in self.data.get("projects", []):
+            if project["title"] == title:
+                return project
+        return None
 
     def get_projects_for_user(self, username):
         """
@@ -284,19 +286,10 @@ class ProjectManager(DataManager):
         projects = self.data.get("projects", [])
         user_projects = []
         for project in projects:
-            if username in project.get("members", []):
+            members = [list(member.keys())[0] for member in project.get("members", [])]
+            if username in members:
                 user_projects.append(project)
         return user_projects
-
-    def get_members(self, project_title):
-        """
-        Retrieves the list of members for a given project.
-        """
-        project = self.get_project(project_title)
-        if not project:
-            raise ValueError(f"Project with title '{project_title}' not found!")
-
-        return project.get("members", [])
 
     def list_projects(self):
         """
@@ -309,21 +302,22 @@ class ProjectManager(DataManager):
             return []
         return projects
 
-    def add_member(self, project_title, username):
+    def add_member(self, project_title, username, role, project_manager):
         """
         Adds a user to a project.
         """
         self.reload_data()
-        project = self.get_project(project_title)
+        project = project_manager.get_project(project_title)
         if not project:
             raise ValueError(f"Project with Title'{project_title}' not found!")
 
         if username in project.get("members", []):
             print(f"[bold red]Error: User '{username}' is already a member of the project![/]")
             return
-        project["members"].append(username)
+        if not role:
+            role = "viewer"
+        project["members"].append({username: role})
         self._save_data(self.data, self.data_filename)
-
 
     def remove_member_from_project(self, project_title, username):
         """
@@ -334,10 +328,12 @@ class ProjectManager(DataManager):
         if not project:
             raise ValueError("Project not found!")
 
-        if username not in project["members"]:
+        usernames = [list(member.keys())[0] for member in project["members"]]
+        if username not in usernames:
             raise ValueError("User is not a member of the project!")
 
-        project["members"].remove(username)
+        del project["members"][usernames.index(username)]
+        
         self._save_data(self.data, self.data_filename)
     
     def delete_project(self, project_title):
@@ -351,14 +347,29 @@ class ProjectManager(DataManager):
 
         self.data["projects"].remove(project)
         self._save_data(self.data, self.data_filename)
+        
+    def get_member_role(self, project_title, username):
+        """
+        Retrieves the role of a member in a project.
+        """
+        self.reload_data()
+        project = self.get_project(project_title)
+        if not project:
+            raise ValueError(f"Project with title '{project_title}' not found!")
+
+        for member in project.get("members", []):
+            if username in member:
+                return member[username]
+        return None
 
 
 class TaskManager(DataManager):
     def get_project(self, project_title):
-        with open("data.json", "r") as f:
-            projects = json.load(f)["projects"]
-        project = next((proj for proj in projects if proj["title"] == project_title), None)
-        return project
+        self.reload_data()
+        for project in self.data.get("projects", []):
+            if project["title"] == project_title:
+                return project
+        return None
 
     def add_task(self, project_title, task_title, description, duration, priority, status="TODO"):
         self.reload_data()
@@ -382,6 +393,7 @@ class TaskManager(DataManager):
 
         project["tasks"][status].append(task)
         self._save_data(self.data, self.data_filename)
+        print(f"[green]Task added with title: {task_title}[/]")
         return task
     
     def edit_task(self, project_title, task_title, new_title, new_description, new_duration, new_priority):
@@ -504,7 +516,11 @@ if __name__ == "__main__":
     if args.command == "create-user":
         user_manager.create_user(args.username, args.password, args.is_active, args.email, True)
     elif args.command == "purge-data":
-        data_manager.purge_data(input("[bold red]Are you sure you want to erase all data? (y/n): "))
+        confirmation = input("[bold red]Are you sure you want to erase all data? (y/n): ")
+        if confirmation.lower() == 'y':
+            data_manager.purge_data()
+        else:
+            print("Data purge cancelled.")
     elif args.command == "create-project":
         project_manager.create_project(args.title, args.start_date)
     elif args.command == "add-member":

@@ -84,9 +84,8 @@ def profile_settings(username):
 
         console.print(f"{field} updated successfully!", style="success")
 
-def add_task_to_board(project_title, task_title, description, duration, priority):
-    status = "TODO" 
-    task_manager.add_task(project_title, task_title, description, duration, priority, status)
+# def add_task_to_board(project_title, task_title, description, duration, priority, status):
+#     task_manager.add_task(project_title, task_title, description, duration, priority, status)
 
 def move_task_on_board(project_title, task_title, new_status):
     try:
@@ -314,72 +313,70 @@ def manage_tasks(project_title):
             return render_template('error.html', error="Project not found")
         
         tasks = project["tasks"]
-        
+                        
         if request.method == 'POST':
-            if 'task_title' in request.form:
-                task_title = request.form['task_title']
-                description = request.form['description']
-                duration = int(request.form['duration'])
-                priority = request.form['priority']
-                try:
-                    add_task_to_board(project_title, task_title, description, duration, priority)
+            try:
+                if 'task_title' in request.form:
+                    task_title = request.form['task_title']
+                    description = request.form['description']
+                    duration = int(request.form['duration'])
+                    priority = request.form['priority']
+                    status = request.form['status']
+                    task_manager.add_task(project_title, task_title, description, duration, priority, status)
+                    flash('Task added successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
-                except Exception as e:
-                    return render_template('error.html', error=str(e))
-            elif 'task_title_move' in request.form:
-                task_title_move = request.form['task_title_move']
-                new_status = request.form['new_status']
-                try:
+                
+                elif 'task_title_move' in request.form:
+                    task_title_move = request.form['task_title_move']
+                    new_status = request.form['new_status']
                     move_task_on_board(project_title, task_title_move, new_status)
+                    flash('Task moved successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
-                except Exception as e:
-                    return render_template('error.html', error=str(e))
-            elif 'task_title_delete' in request.form:
-                task_title_delete = request.form['task_title_delete']
-                try:
+                
+                elif 'task_title_delete' in request.form:
+                    task_title_delete = request.form['task_title_delete']
                     delete_task_from_board(project_title, task_title_delete)
+                    flash('Task deleted successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
-                except Exception as e:
-                    return render_template('error.html', error=str(e))
-            elif 'member_username' in request.form:
-                member_username = request.form['member_username']
-                try:
-                    project_manager.add_member(project_title, member_username)
+                
+                elif 'add_member' in request.form:
+                    member_username = request.form['member_username']
+                    member_role = request.form['memeber_role']
+                    project_manager.add_member(project_title, member_username, member_role)
+                    flash('Member added successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
-                except Exception as e:
-                    return render_template('error.html', error=str(e))
-            elif 'remove_member_username' in request.form:
-                remove_member_username = request.form['remove_member_username']
-                try:
+                
+                elif 'remove_member_username' in request.form:
+                    remove_member_username = request.form['remove_member_username']
                     project_manager.remove_member_from_project(project_title, remove_member_username)
+                    flash('Member removed successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
-                except Exception as e:
-                    return render_template('error.html', error=str(e))
-            elif 'task_title_assignee' in request.form:
-                task_title_assignee = request.form['task_title_assignee']
-                assignee_username = request.form['assignee_username']
-                try:
+                
+                elif 'task_title_assignee' in request.form:
+                    task_title_assignee = request.form['task_title_assignee']
+                    assignee_username = request.form['assignee_username']
                     task_manager.assign_member(project_title, task_title_assignee, assignee_username)
+                    flash('Member assigned to task successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
-                except Exception as e:
-                    return render_template('error.html', error=str(e))
-            elif 'task_title_remove_assignee' in request.form:
-                task_title_remove_assignee = request.form['task_title_remove_assignee']
-                assignee_username_remove = request.form['assignee_username_remove']
-                try:
+                
+                elif 'task_title_remove_assignee' in request.form:
+                    task_title_remove_assignee = request.form['task_title_remove_assignee']
+                    assignee_username_remove = request.form['assignee_username_remove']
                     task_manager.remove_assignee_from_task(project_title, task_title_remove_assignee, assignee_username_remove)
+                    flash('Assignee removed from task successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
-                except Exception as e:
-                    return render_template('error.html', error=str(e))
-            elif 'view_members' in request.form:
-                # Handle view members option
-                members = project_manager.get_members(project_title)
-                return render_template('view_members.html', project_title=project_title, members=members)
+                
+                elif 'view_members' in request.form:
+                    members = project_manager.get_members(project_title)
+                    return render_template('view_members.html', project_title=project_title, members=members)
+            
+            except Exception as e:
+                flash(f'Error: {str(e)}', 'danger')
+                return redirect(url_for('manage_tasks', project_title=project_title))
 
         return render_template('manage_tasks.html', project_title=project_title, tasks=tasks)
     else:
         return redirect(url_for('login'))
-
 if __name__ == '__main__':
     user_manager = UserManager()
     project_manager = ProjectManager()

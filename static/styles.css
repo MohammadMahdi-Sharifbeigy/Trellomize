@@ -443,7 +443,7 @@ table tr:nth-child(even) {
 .task-card {
   background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 10px 10px 50px rgba(0, 0, 0, 0.1);
   margin-bottom: 15px;
   padding: 15px;
 }
