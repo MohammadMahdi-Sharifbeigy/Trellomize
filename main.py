@@ -190,11 +190,14 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 "7": "Assign Member",
                 "8": "Remove Assignee",
                 "9": "View Members",
+                "11": "Comments",
                 "0": "Exit",
             }
             if project_manager.is_project_owner(project_title, current_user):
                 menu_options.pop("0")
+                menu_options.pop("11")
                 menu_options["10"] = "Delete Project"
+                menu_options["11"] = "Comments"
                 menu_options["0"] = "Exit"
             
             for key, value in menu_options.items():
@@ -401,7 +404,16 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 except Exception as e:
                     console.print(f"An error occurred while deleting the project: {e}", style="danger")
                     logger.error(f"Error deleting project '{project_title}': {e}")
-                    
+            
+            elif action == "11":
+                all_tasks = task_manager.get_tasks_for_project(project_title)
+                if len(all_tasks) == 0:
+                    console.print("No tasks found in the project.", style="warning")
+                    input("Press any key to continue...")
+                    clear_screen()
+                    continue
+                handle_comments(project_title, task_manager, current_user)
+                
             elif action == "0":
                 break
 
@@ -414,6 +426,36 @@ def display_project(project_title, project_manager, task_manager, current_user):
     except Exception as e:
         console.print(f"An error occurred in the menu: {e}")
         logger.error(f"Error in project '{project_title}' menu: {e}")
+
+def handle_comments(project_title, task_manager, current_user):
+    task_title = Prompt.ask("Enter the task title to manage comments")
+    while True:
+        clear_screen()
+        console.print(f"Managing comments for task: [bold]{task_title}[/bold] in project: [bold]{project_title}[/bold]")
+        comments = task_manager.get_comments(project_title, task_title)
+        if comments:
+            for index, comment in enumerate(comments):
+                console.print(f"[{index}] {comment['comment']} (by {comment['author']} - at {comment['timestamp']})")
+        else:
+            console.print("No comments found.", style="warning")
+
+        comment_action = Prompt.ask("Choose an option", choices=["add", "edit", "delete", "back"], default="back")
+        if comment_action == "add":
+            comment = Prompt.ask("Enter your comment")
+            task_manager.add_comment(project_title, task_title, comment, current_user)
+            console.print(f"Comment added successfully.", style="success")
+        elif comment_action == "edit":
+            index = int(Prompt.ask("Enter the comment zindex to edit"))
+            new_comment = Prompt.ask("Enter your new comment")
+            task_manager.edit_comment(project_title, task_title, index, new_comment)
+            console.print(f"Comment edited successfully.", style="success")
+        elif comment_action == "delete":
+            index = int(Prompt.ask("Enter the comment index to delete"))
+            task_manager.delete_comment(project_title, task_title, index)
+            console.print(f"Comment deleted successfully.", style="success")
+        elif comment_action == "back":
+            break
+        input("Press any key to continue...")
 
 def add_task_to_board(project_title):
     # Collect task details from the user
