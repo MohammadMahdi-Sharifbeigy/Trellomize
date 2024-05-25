@@ -315,7 +315,7 @@ class ProjectManager(DataManager):
             print(f"[bold red]Error: User '{username}' is already a member of the project![/]")
             return
         if not role:
-            role = "viewer"
+            role = "member"
         project["members"].append({username: role})
         self._save_data(self.data, self.data_filename)
 
