@@ -443,7 +443,7 @@ class TaskManager(DataManager):
 
         raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
 
-    def assign_member(self, project_title, task_title, username):
+    def assignee_member(self, project_title, task_title, username):
         self.reload_data()
         project = self.get_project(project_title)
         if not project:
@@ -463,7 +463,7 @@ class TaskManager(DataManager):
         if not task_found:
             raise ValueError("Task not found in project!")
 
-    def remove_assignee_from_task(self, project_title, task_title, username):
+    def remove_assignee(self, project_title, task_title, username):
         self.reload_data()
         project = self.get_project(project_title)
         if not project:
@@ -502,6 +502,48 @@ class TaskManager(DataManager):
                 if task["title"] == task_title:
                     return task
         return None
+    
+    def add_comment(self, project_title, task_title, comment, author):
+        self.reload_data()
+        task = self.get_task(project_title, task_title)
+        if not task:
+            raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
+
+        task["comments"].append({"comment": comment, "author": author, "timestamp": datetime.now().isoformat()})
+        self._save_data(self.data, self.data_filename)
+
+    def edit_comment(self, project_title, task_title, comment_index, new_comment):
+        self.reload_data()
+        task = self.get_task(project_title, task_title)
+        if not task:
+            raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
+
+        if comment_index >= len(task["comments"]):
+            raise ValueError(f"Comment index '{comment_index}' out of range.")
+
+        task["comments"][comment_index]["comment"] = new_comment
+        task["comments"][comment_index]["timestamp"] = datetime.now().isoformat()
+        self._save_data(self.data, self.data_filename)
+
+    def delete_comment(self, project_title, task_title, comment_index):
+        self.reload_data()
+        task = self.get_task(project_title, task_title)
+        if not task:
+            raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
+
+        if comment_index >= len(task["comments"]):
+            raise ValueError(f"Comment index '{comment_index}' out of range.")
+
+        task["comments"].pop(comment_index)
+        self._save_data(self.data, self.data_filename)
+
+    def get_comments(self, project_title, task_title):
+        self.reload_data()
+        task = self.get_task(project_title, task_title)
+        if not task:
+            raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
+
+        return task["comments"]
 
 
 if __name__ == "__main__":

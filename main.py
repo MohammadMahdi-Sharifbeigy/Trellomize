@@ -46,7 +46,7 @@ def display_project_list(current_user):
             if st.button(f"Open {row[0]}", key=f"open_{index}"):
                 st.session_state['current_project'] = row[0]
                 st.session_state['page'] = 'project_detail'
-                st.experimental_rerun()  # Rerun the app to apply the changes to session state
+                st.experimental_rerun() 
     else:
         st.write("No projects available!")
 
@@ -331,23 +331,29 @@ def manage_members(project_title):
     if not project:
         st.error(f"Project '{project_title}' not found!")
         return
+    
+    with open("users.json", "r") as f:
+        users_data = json.load(f)
+    all_users = [user["username"] for user in users_data["users"]]
 
     st.header(f"Manage Members for Project: {project_title}")
     members = project.get("members", [])
-    all_users = user_manager.get_members()
-
-    member_columns = ["Username", "Role"]
-    member_rows = [[list(member.keys())[0], list(member.values())[0]] for member in members]
-    all_user_rows = [[user["username"], ""] for user in all_users if {user["username"]: "viewer"} not in members]
-
+    member_usernames = [list(member.keys())[0] for member in members]
+    
+    users_to_add = [username for username in all_users if username not in member_usernames]
+    
     st.subheader("Current Members")
-    st.table(member_rows)
+    st.table([[username, role] for username, role in zip(member_usernames, members)])
 
     st.subheader("Add Member")
-    user_to_add = st.selectbox("Select User to Add", [user["username"] for user in all_users if {user["username"]: "viewer"} not in members])
+    user_to_add = st.selectbox("Select User to Add", users_to_add)
     role_to_add = st.selectbox("Select Role", ["viewer", "editor", "admin"])
     if st.button("Add Member"):
         handle_add_member(project_title, user_to_add, role_to_add)
+    
+    member_columns = ["Username", "Role"]
+    member_rows = [[list(member.keys())[0], list(member.values())[0]] for member in members]
+    all_user_rows = [[user, ""] for user in all_users if user not in member_usernames]
 
     st.subheader("Remove Member")
     user_to_remove = st.selectbox("Select Member to Remove", [list(member.keys())[0] for member in members])
@@ -359,7 +365,7 @@ def manage_members(project_title):
 
 def handle_add_member(project_title, username, role):
     try:
-        project_manager.add_member(project_title, username, role)
+        project_manager.add_member(project_title, username, role, project_manager)
         st.success(f"User '{username}' added to project '{project_title}' successfully")
         st.experimental_rerun()
     except Exception as e:
@@ -373,80 +379,104 @@ def handle_remove_member(project_title, username):
     except Exception as e:
         st.error(f"Error removing member from project: {e}")
 
-def manage_assignees(project_title, task_title=None):
-    if task_title is None:
-        task_title = st.session_state.get('current_task')
-    if not task_title:
-        st.error("Task not specified!")
+def manage_assignees(project_title):
+    st.header("Manage Assignees and Comments")
+
+    project = project_manager.get_project(project_title)
+    if not project:
+        st.error(f"Project '{project_title}' not found!")
         return
 
-    task = task_manager.get_task(project_title, task_title)
-    if not task:
-        st.error(f"Task '{task_title}' not found in project '{project_title}'!")
+    tasks_by_status = project.get("tasks", {})
+    if not tasks_by_status:
+        st.info("No tasks found in this project.")
         return
 
-    st.header(f"Manage Assignees for Task: {task_title}")
-    assignees = task.get("assignees", [])
-    all_users = user_manager.get_members()
+    all_tasks = []
+    for status, tasks in tasks_by_status.items():
+        for task in tasks:
+            all_tasks.append((task["title"], status))
 
-    st.subheader("Current Assignees")
-    st.write(", ".join(assignees))
+    if not all_tasks:
+        st.info("No tasks available.")
+        return
 
-    st.subheader("Add Assignee")
-    user_to_add = st.selectbox("Select User to Add", [user["username"] for user in all_users if user["username"] not in assignees])
-    if st.button("Add Assignee"):
-        handle_add_assignee(project_title, task_title, user_to_add)
+    selected_task_title = st.selectbox("Select Task", options=[task[0] for task in all_tasks])
 
-    st.subheader("Remove Assignee")
-    user_to_remove = st.selectbox("Select Assignee to Remove", [user for user in assignees])
-    if st.button("Remove Assignee"):
-        handle_remove_assignee(project_title, task_title, user_to_remove)
-
-    if st.button("Back to Task"):
-        st.session_state['page'] = 'project_detail'
-
-def handle_add_assignee(project_title, task_title, username):
-    try:
-        task_manager.assign_member(project_title, task_title, username)
-        st.success(f"User '{username}' assigned to task '{task_title}' successfully")
+    if st.button("Manage Assignees and Comments for Selected Task"):
+        st.session_state['selected_task'] = selected_task_title
         st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Error assigning user to task: {e}")
 
-def handle_remove_assignee(project_title, task_title, username):
-    try:
-        task_manager.remove_assignee_from_task(project_title, task_title, username)
-        st.success(f"User '{username}' removed from task '{task_title}' successfully")
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Error removing user from task: {e}")
+    if 'selected_task' in st.session_state:
+        selected_task_title = st.session_state['selected_task']
+        for task_title, status in all_tasks:
+            if task_title == selected_task_title:
+                manage_assignees_for_task(project_title, selected_task_title, status)
 
+def manage_assignees_for_task(project_title, task_title, status):
+    st.header(f"Manage Assignees and Comments for Task: {task_title}")
 
-def manage_assignees(project_title, task_title):
-    task = task_manager.get_task(project_title, task_title)
-    if not task:
-        st.error(f"Task '{task_title}' not found in project '{project_title}'!")
+    project = project_manager.get_project(project_title)
+    if not project:
+        st.error(f"Project '{project_title}' not found!")
         return
 
-    st.header(f"Manage Assignees for Task: {task_title}")
+    tasks_by_status = project.get("tasks", {})
+    tasks = tasks_by_status.get(status, [])
+
+    task = next((t for t in tasks if t["title"] == task_title), None)
+    if not task or not isinstance(task, dict):
+        st.error(f"Task '{task_title}' data is corrupted or invalid!")
+        return
+
+    st.subheader("Manage Assignees")
     assignees = task.get("assignees", [])
-    all_users = user_manager.get_members()
+    project_members = [member for member_dict in project.get("members", []) for member in member_dict.keys()]
 
-    st.subheader("Current Assignees")
-    st.write(", ".join(assignees))
+    new_assignee = st.selectbox("Select Assignee", options=project_members)
 
-    st.subheader("Add Assignee")
-    user_to_add = st.selectbox("Select User to Add", [user["username"] for user in all_users if user["username"] not in assignees])
     if st.button("Add Assignee"):
-        handle_add_assignee(project_title, task_title, user_to_add)
+        task_manager.assignee_member(project_title, task_title, new_assignee)
+        st.experimental_rerun()
 
-    st.subheader("Remove Assignee")
-    user_to_remove = st.selectbox("Select Assignee to Remove", [user for user in assignees])
-    if st.button("Remove Assignee"):
-        handle_remove_assignee(project_title, task_title, user_to_remove)
+    if assignees:
+        st.subheader("Current Assignees")
+        for assignee in assignees:
+            if st.button(f"Remove {assignee}"):
+                task_manager.remove_assignee(project_title, task_title, assignee)
+                st.experimental_rerun()
 
-    if st.button("Back to Task"):
+    st.subheader("Manage Comments")
+    comments = task.get("comments", [])
+
+    new_comment = st.text_area("New Comment")
+    current_user = st.session_state.get('current_user', 'Anonymous')
+
+    if st.button("Add Comment"):
+        task_manager.add_comment(project_title, task_title, new_comment, current_user)
+        st.experimental_rerun()
+
+    if comments:
+        for i, comment in enumerate(comments):
+            st.write(f"Comment by {comment['author']} at {comment['timestamp']}: {comment['comment']}")
+            if st.button(f"Edit Comment {i + 1}"):
+                new_comment_text = st.text_area(f"Edit Comment {i + 1}", value=comment['comment'])
+                if st.button(f"Save Comment {i + 1}"):
+                    task_manager.edit_comment(project_title, task_title, i, new_comment_text)
+                    st.experimental_rerun()
+            if st.button(f"Delete Comment {i + 1}"):
+                task_manager.delete_comment(project_title, task_title, i)
+                st.experimental_rerun()
+
+    if st.button("Back to Task Selection"):
+        del st.session_state['selected_task']
+        st.experimental_rerun()
+
+    if st.button("Back to Project Detail"):
         st.session_state['page'] = 'project_detail'
+        st.session_state['current_project'] = project_title
+        st.experimental_rerun()
+
 
 def handle_add_assignee(project_title, task_title, username):
     try:
@@ -509,7 +539,11 @@ def main():
     elif st.session_state['page'] == 'manage_members':
         manage_members(st.session_state['current_project'])
     elif st.session_state['page'] == 'manage_assignees':
-        manage_assignees(st.session_state['current_project'], st.session_state['current_task'])
+        project_title = st.session_state.get('current_project')
+        if project_title:
+            manage_assignees(project_title)
+        else:
+            st.session_state['page'] = 'project_list'
 
 if __name__ == "__main__":
     main()
