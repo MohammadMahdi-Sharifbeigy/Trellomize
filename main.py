@@ -120,39 +120,55 @@ def display_project(project_title):
 
     st.header(f"Project: {project_title}")
     st.markdown("---")
-
+    
     status_columns = {
         "TODO": [],
         "DOING": [],
         "DONE": [],
         "ARCHIVED": []
     }
+    
+    if "tasks" in project:
+        for status, tasks in project["tasks"].items():
+            for task in tasks:
+                task_info = {
+                    "title": task['title'],
+                    "assignees": ", ".join(task.get('assignees', [])),
+                    "priority": task['priority'],
+                    "end_date": task['end_date'],
+                    "status": status,
+                    "description": task.get('description', '')
+                }
+                status_columns[status].append(task_info)
+    else:
+        st.write("")
 
-    for status, tasks in project["tasks"].items():
-        for task in tasks:
-            task_info = {
-                "title": task['title'],
-                "assignees": ", ".join(task.get('assignees', [])),
-                "priority": task['priority'],
-                "end_date": task['end_date'],
-                "status": status,
-                "description": task.get('description', '')
-            }
-            status_columns[status].append(task_info)
-
-    # Visualize task distribution with a pie chart
     st.subheader("Task Distribution")
     statuses = list(status_columns.keys())
     task_counts = [len(tasks) for tasks in status_columns.values()]
 
-    fig, ax = plt.subplots()
-    ax.pie(task_counts, labels=statuses, autopct='%1.1f%%', startangle=90)
-    ax.axis('equal')
-    st.pyplot(fig)
+    plt.style.use('dark_background')
 
+    if sum(task_counts) == 0:
+        st.write("No tasks available to display in the pie chart.")
+    else:
+
+        explode = [0.1 if status == "TODO" else 0.07 if status == "DOING" else 0.04 if status == "DONE" else 0.02 for status in statuses]
+
+        colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99']
+
+        fig, ax = plt.subplots()
+        wedges, texts, autotexts = ax.pie(task_counts, autopct='%1.1f%%', startangle=90, explode=explode, colors=colors, shadow=True)
+
+        legend = ax.legend(wedges, statuses, title="Statuses", bbox_to_anchor=(1, 0, 0.5, 1), loc="center left", facecolor='grey')
+
+        legend.get_title().set_color('white')
+
+        ax.axis('equal')
+        st.pyplot(fig)
+        
     st.markdown("---")
 
-    # Overall task completion progress
     total_tasks = sum(task_counts)
     completed_tasks = len(status_columns["DONE"]) + len(status_columns["ARCHIVED"])
     st.subheader("Overall Task Completion")
