@@ -407,7 +407,7 @@ def manage_members(project_title):
         st.write("No users available to add.")
     else:
         user_to_add = st.selectbox("Select User to Add", users_to_add)
-        role_to_add = st.selectbox("Select Role", ["viewer", "editor", "admin"])
+        role_to_add = st.selectbox("Select Role", ["member", "editor", "admin"])
         if st.button("Add Member"):
             handle_add_member(project_title, user_to_add, role_to_add)
 
