@@ -28,6 +28,7 @@ def login(username, password):
 def logout():
     st.session_state.clear()
     st.session_state['page'] = 'login'
+    st.experimental_rerun()
 
 def display_project_list(current_user):
     user = user_manager.get_user(current_user)
@@ -46,12 +47,13 @@ def display_project_list(current_user):
             if st.button(f"Open {row[0]}", key=f"open_{index}"):
                 st.session_state['current_project'] = row[0]
                 st.session_state['page'] = 'project_detail'
-                st.experimental_rerun() 
+                st.experimental_rerun()
     else:
         st.write("No projects available!")
 
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
+        st.experimental_rerun()
 
 def create_new_project(current_user):
     st.header("Create New Project")
@@ -62,12 +64,14 @@ def create_new_project(current_user):
 
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
+        st.experimental_rerun()
 
 def handle_create_project(title, start_date, current_user):
     try:
         project = project_manager.create_project(title, start_date, current_user)
         st.success(f"New project created successfully with Title: {project['title']}")
         st.session_state['page'] = 'project_list'
+        st.experimental_rerun()
     except Exception as e:
         st.error(f"Error creating project: {e}")
 
@@ -85,6 +89,7 @@ def profile_settings(username):
 
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
+        st.experimental_rerun()
 
 def handle_update_profile(username, password, email):
     updates = {}
@@ -95,6 +100,7 @@ def handle_update_profile(username, password, email):
     try:
         user_manager.update_user(username, updates)
         st.success("Profile updated successfully!")
+        st.experimental_rerun()
     except Exception as e:
         st.error(f"Error updating profile: {e}")
 
@@ -159,6 +165,7 @@ def display_project(project_title):
                 if st.button(f"Details: {task_info['title']}", key=f"details_{task_info['title'].replace(' ', '_')}"):
                     st.session_state['popup_task'] = task_info
                     st.session_state['show_popup'] = True
+                    st.experimental_rerun()
 
     if st.session_state.get('show_popup', False):
         task = st.session_state['popup_task']
@@ -185,6 +192,7 @@ def display_project(project_title):
                 st.session_state['current_task'] = task['title']
                 st.session_state['page'] = 'delete_task'
                 st.session_state['current_project'] = project_title
+                st.experimental_rerun()
 
         if st.button("Close", key=f"close_{task['title']}"):
             st.session_state['show_popup'] = False
@@ -194,17 +202,21 @@ def display_project(project_title):
     if st.sidebar.button("Add Task", key="add_task"):
         st.session_state['page'] = 'add_task'
         st.session_state['current_project'] = project_title
+        st.experimental_rerun()
 
     if st.sidebar.button("Manage Members", key="manage_members"):
         st.session_state['page'] = 'manage_members'
         st.session_state['current_project'] = project_title
+        st.experimental_rerun()
         
     if st.sidebar.button("Manage Assignees", key="manage_assignees"):
         st.session_state['page'] = 'manage_assignees'
         st.session_state['current_project'] = project_title
+        st.experimental_rerun()
 
     if st.sidebar.button("Back to Project List", key="back_to_project_list"):
         st.session_state['page'] = 'project_list'
+        st.experimental_rerun()
 
 def add_task(project_title):
     st.header("Add Task")
@@ -218,12 +230,14 @@ def add_task(project_title):
 
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
 
 def handle_add_task(project_title, title, description, duration, priority, status):
     try:
-        task_manager.add_task(project_title, title, description, duration, priority,status)
+        task_manager.add_task(project_title, title, description, duration, priority, status)
         st.success(f"Task '{title}' added successfully")
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
     except Exception as e:
         st.error(f"Error adding task: {e}")
 
@@ -239,12 +253,14 @@ def edit_task(project_title):
 
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
 
 def handle_edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority):
     try:
         task_manager.edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
         st.success(f"Task '{task_title}' updated successfully")
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
     except Exception as e:
         st.error(f"Error updating task: {e}")
 
@@ -257,12 +273,14 @@ def move_task(project_title):
 
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
 
 def handle_move_task(project_title, task_title, new_status):
     try:
         task_manager.move_task(project_title, task_title, new_status)
         st.success(f"Task '{task_title}' moved to '{new_status}'")
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
     except Exception as e:
         st.error(f"Error moving task: {e}")
 
@@ -274,12 +292,14 @@ def delete_task(project_title):
 
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
 
 def handle_delete_task(project_title, task_title):
     try:
         task_manager.delete_task(project_title, task_title)
         st.success(f"Task '{task_title}' deleted successfully")
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
     except Exception as e:
         st.error(f"Error deleting task: {e}")
 
@@ -298,6 +318,7 @@ def admin_panel():
 
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
+        st.experimental_rerun()
 
 def login_dialog():
     st.header("Login")
@@ -307,12 +328,15 @@ def login_dialog():
         success, user = login(username, password)
         if success:
             st.session_state['username'] = username
+            st.session_state['current_user'] = username  # Set current user here
             st.session_state['is_admin'] = user["is_admin"]
             st.session_state['page'] = 'main_menu'
+            st.experimental_rerun()
         else:
             st.error("Login failed, please try again.")
     if st.button("Register"):
         st.session_state['page'] = 'register'
+        st.experimental_rerun()
 
 def register_dialog():
     st.header("Register")
@@ -335,9 +359,10 @@ def register_dialog():
         if user_manager.create_user(username=username, password=password, email=email):
             st.success("Registration successful!")
             st.session_state['page'] = 'login'
+            st.experimental_rerun()
         else:
             st.error("Registration failed, please try again.")
-            
+
 def manage_members(project_title):
     project = project_manager.get_project(project_title)
     if not project:
@@ -362,7 +387,7 @@ def manage_members(project_title):
     role_to_add = st.selectbox("Select Role", ["viewer", "editor", "admin"])
     if st.button("Add Member"):
         handle_add_member(project_title, user_to_add, role_to_add)
-    
+
     member_columns = ["Username", "Role"]
     member_rows = [[list(member.keys())[0], list(member.values())[0]] for member in members]
     all_user_rows = [[user, ""] for user in all_users if user not in member_usernames]
@@ -374,6 +399,7 @@ def manage_members(project_title):
 
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
+        st.experimental_rerun()
 
 def handle_add_member(project_title, username, role):
     try:
@@ -489,7 +515,6 @@ def manage_assignees_for_task(project_title, task_title, status):
         st.session_state['current_project'] = project_title
         st.experimental_rerun()
 
-
 def handle_add_assignee(project_title, task_title, username):
     try:
         task_manager.assign_member(project_title, task_title, username)
@@ -510,13 +535,17 @@ def main_menu():
     st.header("Main Menu")
     if st.button("Project List"):
         st.session_state['page'] = 'project_list'
+        st.experimental_rerun()
     if st.button("Create New Project"):
         st.session_state['page'] = 'create_project'
+        st.experimental_rerun()
     if st.button("Profile Settings"):
         st.session_state['page'] = 'profile_settings'
+        st.experimental_rerun()
     if st.session_state.get('is_admin', False):
         if st.button("Admin Panel"):
             st.session_state['page'] = 'admin_panel'
+            st.experimental_rerun()
     if st.button("Log Out"):
         logout()
 
@@ -556,6 +585,7 @@ def main():
             manage_assignees(project_title)
         else:
             st.session_state['page'] = 'project_list'
+            st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
