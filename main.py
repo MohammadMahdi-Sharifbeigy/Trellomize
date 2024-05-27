@@ -320,6 +320,18 @@ def register_dialog():
     password = st.text_input("Choose a password", type="password")
     email = st.text_input("Enter your email")
     if st.button("Register"):
+        if len(username) == 0:
+            st.error("Username cannot be empty!")
+            return
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            st.error("Invalid email address!")
+            return
+        if not re.match(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$", password):
+            st.error("Password must be at least 8 characters long and contain at least one letter and one number!")
+            return
+        if user_manager.get_user(username):
+            st.error("Username already exists, please choose a different one.")
+            return
         if user_manager.create_user(username=username, password=password, email=email):
             st.success("Registration successful!")
             st.session_state['page'] = 'login'
@@ -450,7 +462,7 @@ def manage_assignees_for_task(project_title, task_title, status):
     comments = task.get("comments", [])
 
     new_comment = st.text_area("New Comment")
-    current_user = st.session_state.get('current_user', 'Anonymous')
+    current_user = st.session_state.get('username', 'Anonymous')
 
     if st.button("Add Comment"):
         task_manager.add_comment(project_title, task_title, new_comment, current_user)
