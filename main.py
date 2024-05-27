@@ -136,42 +136,33 @@ def display_project(project_title):
         with columns[idx]:
             st.subheader(status)
             for task_info in tasks:
-                st.markdown(f"""
-                    <div class="task-box">
-                        <strong>{task_info['title']}</strong><br>
-                        <em>Assignees: {task_info['assignees']}</em><br>
-                        Priority: {task_info['priority']}<br>
-                        Due Date: {task_info['end_date']}
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button(f"Details: {task_info['title']}", key=f"details_{task_info['title']}"):
-                    st.session_state['popup_task'] = task_info
-                    st.session_state['show_popup'] = True
+                # st.markdown(f"""
+                #     <div class="task-box">
+                #         <strong>{task_info['title']}</strong><br>
+                #         <em>Assignees: {task_info['assignees']}</em><br>
+                #         Priority: {task_info['priority']}<br>
+                #         Due Date: {task_info['end_date']}
+                #     </div>
+                # """, unsafe_allow_html=True)
 
-                new_status = st.selectbox(f"Move {task_info['title']} to", options=["TODO", "DOING", "DONE", "ARCHIVED"], index=["TODO", "DOING", "DONE", "ARCHIVED"].index(task_info['status']), key=f"move_{task_info['title']}")
-                if new_status != task_info['status']:
-                    handle_move_task(project_title, task_info['title'], new_status)
+                with st.expander(task_info['title']):
+                    st.write(f"**Priority:** {task_info['priority']}")
+                    st.write(f"**Assignees:** {task_info['assignees']}")
+                    st.write(f"**Due Date:** {task_info['end_date']}")
+                    st.write(f"**Description:** {task_info['description']}")
 
-                if st.button(f"Edit: {task_info['title']}", key=f"edit_{task_info['title']}"):
-                    st.session_state['current_task'] = task_info['title']
-                    st.session_state['current_project'] = project_title
-                    st.session_state['page'] = 'edit_task'
-                    st.experimental_rerun()
+                    new_status = st.selectbox(f"Move {task_info['title']} to", options=["TODO", "DOING", "DONE", "ARCHIVED"], index=["TODO", "DOING", "DONE", "ARCHIVED"].index(task_info['status']), key=f"move_{task_info['title']}")
+                    if new_status != task_info['status']:
+                        handle_move_task(project_title, task_info['title'], new_status)
 
-                if st.button(f"Delete: {task_info['title']}", key=f"delete_{task_info['title']}"):
-                    handle_delete_task(project_title, task_info['title'])
+                    if st.button(f"Edit: {task_info['title']}", key=f"edit_{task_info['title']}"):
+                        st.session_state['current_task'] = task_info['title']
+                        st.session_state['current_project'] = project_title
+                        st.session_state['page'] = 'edit_task'
+                        st.experimental_rerun()
 
-    if st.session_state.get('show_popup', False):
-        task = st.session_state['popup_task']
-        st.markdown(f"<h2>{task['title']}</h2>", unsafe_allow_html=True)
-        st.write(f"**Priority:** {task['priority']}")
-        st.write(f"**Assignees:** {task['assignees']}")
-        st.write(f"**Due Date:** {task['end_date']}")
-        st.write(f"**Description:** {task['description']}")
-        if st.button("Close"):
-            st.session_state['show_popup'] = False
-            st.experimental_rerun()
+                    if st.button(f"Delete: {task_info['title']}", key=f"delete_{task_info['title']}"):
+                        handle_delete_task(project_title, task_info['title'])
 
     st.sidebar.header("Project Actions")
     if st.sidebar.button("Add Task", key="add_task"):
@@ -254,7 +245,6 @@ def handle_edit_task(project_title, task_title, new_title, new_description, new_
         st.experimental_rerun()
     except Exception as e:
         st.error(f"Error updating task: {e}")
-
 
 def delete_task(project_title):
     st.header("Delete Task")
@@ -346,25 +336,30 @@ def manage_members(project_title):
 
     st.header(f"Manage Members for Project: {project_title}")
     members = project.get("members", [])
+    admin_user = list(next((member for member in members if "owner" in member.values()), None).keys())[0]
     member_usernames = [list(member.keys())[0] for member in members]
     
     users_to_add = [username for username in all_users if username not in member_usernames]
     
     st.subheader("Current Members")
-    st.table([[username, role] for username, role in zip(member_usernames, members)])
+    st.table([[username, list(role.values())[0]] for username, role in zip(member_usernames, members)])
 
     st.subheader("Add Member")
-    user_to_add = st.selectbox("Select User to Add", users_to_add)
-    role_to_add = st.selectbox("Select Role", ["viewer", "editor", "admin"])
-    if st.button("Add Member"):
-        handle_add_member(project_title, user_to_add, role_to_add)
+    if not users_to_add:
+        st.write("No users available to add.")
+    else:
+        user_to_add = st.selectbox("Select User to Add", users_to_add)
+        role_to_add = st.selectbox("Select Role", ["viewer", "editor", "admin"])
+        if st.button("Add Member"):
+            handle_add_member(project_title, user_to_add, role_to_add)
 
     member_columns = ["Username", "Role"]
     member_rows = [[list(member.keys())[0], list(member.values())[0]] for member in members]
     all_user_rows = [[user, ""] for user in all_users if user not in member_usernames]
 
     st.subheader("Remove Member")
-    user_to_remove = st.selectbox("Select Member to Remove", [list(member.keys())[0] for member in members])
+    removable_members = [username for username in [list(member.keys())[0] for member in members] if username != admin_user]
+    user_to_remove = st.selectbox("Select Member to Remove", removable_members)
     if st.button("Remove Member"):
         handle_remove_member(project_title, user_to_remove)
 
