@@ -136,15 +136,6 @@ def display_project(project_title):
         with columns[idx]:
             st.subheader(status)
             for task_info in tasks:
-                # st.markdown(f"""
-                #     <div class="task-box">
-                #         <strong>{task_info['title']}</strong><br>
-                #         <em>Assignees: {task_info['assignees']}</em><br>
-                #         Priority: {task_info['priority']}<br>
-                #         Due Date: {task_info['end_date']}
-                #     </div>
-                # """, unsafe_allow_html=True)
-
                 with st.expander(task_info['title']):
                     st.write(f"**Priority:** {task_info['priority']}")
                     st.write(f"**Assignees:** {task_info['assignees']}")
@@ -462,13 +453,14 @@ def manage_assignees_for_task(project_title, task_title, status):
 
     if comments:
         for i, comment in enumerate(comments):
-            st.write(f"Comment by {comment['author']} at {comment['timestamp']}: {comment['comment']}")
-            if st.button(f"Edit Comment {i + 1}"):
-                new_comment_text = st.text_area(f"Edit Comment {i + 1}", value=comment['comment'])
-                if st.button(f"Save Comment {i + 1}"):
+            st.markdown(f"**Comment {i + 1} by {comment['author']} on {comment['timestamp']}**")
+            st.write(comment['comment'])
+            if st.button(f"Edit Comment {i + 1}", key=f"edit_comment_{i}"):
+                new_comment_text = st.text_area(f"Edit Comment {i + 1}", value=comment['comment'], key=f"new_comment_text_{i}")
+                if st.button(f"Save Comment {i + 1}", key=f"save_comment_{i}"):
                     task_manager.edit_comment(project_title, task_title, i, new_comment_text)
                     st.experimental_rerun()
-            if st.button(f"Delete Comment {i + 1}"):
+            if st.button(f"Delete Comment {i + 1}", key=f"delete_comment_{i}"):
                 task_manager.delete_comment(project_title, task_title, i)
                 st.experimental_rerun()
 

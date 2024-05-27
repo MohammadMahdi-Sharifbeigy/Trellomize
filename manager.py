@@ -509,7 +509,7 @@ class TaskManager(DataManager):
         if not task:
             raise ValueError(f"Task with title '{task_title}' not found in project '{project_title}'.")
 
-        task["comments"].append({"comment": comment, "author": author, "timestamp": datetime.now().isoformat()})
+        task["comments"].append({"comment": comment, "author": author, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
         self._save_data(self.data, self.data_filename)
 
     def edit_comment(self, project_title, task_title, comment_index, new_comment):
