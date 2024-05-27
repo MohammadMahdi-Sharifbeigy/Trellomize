@@ -3,6 +3,8 @@ import json
 import re
 from datetime import datetime, timedelta
 import streamlit as st
+import matplotlib.pyplot as plt
+import numpy as np
 from manager import ProjectManager, TaskManager, UserManager
 
 user_manager = UserManager()
@@ -37,6 +39,7 @@ def display_project_list(current_user):
         projects = project_manager.get_projects_for_user(current_user)
 
     st.header("Project List")
+    st.markdown("---")
     if projects:
         columns = ["Title", "Start Date"]
         rows = [[project["title"], project["start_date"]] for project in projects]
@@ -50,17 +53,20 @@ def display_project_list(current_user):
     else:
         st.write("No projects available!")
 
+    st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
         st.experimental_rerun()
 
 def create_new_project(current_user):
     st.header("Create New Project")
+    st.markdown("---")
     title = st.text_input("Enter the title of the new project")
     start_date = st.date_input("Enter the start date of the project")
     if st.button("Create"):
         handle_create_project(title, start_date.strftime("%d/%m/%Y"), current_user)
 
+    st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
         st.experimental_rerun()
@@ -81,11 +87,13 @@ def profile_settings(username):
         return
 
     st.header("Edit your profile")
+    st.markdown("---")
     password = st.text_input("New password", type="password")
     email = st.text_input("New email")
     if st.button("Update"):
         handle_update_profile(username, password, email)
 
+    st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
         st.experimental_rerun()
@@ -111,6 +119,7 @@ def display_project(project_title):
         return
 
     st.header(f"Project: {project_title}")
+    st.markdown("---")
 
     status_columns = {
         "TODO": [],
@@ -131,10 +140,30 @@ def display_project(project_title):
             }
             status_columns[status].append(task_info)
 
+    # Visualize task distribution with a pie chart
+    st.subheader("Task Distribution")
+    statuses = list(status_columns.keys())
+    task_counts = [len(tasks) for tasks in status_columns.values()]
+
+    fig, ax = plt.subplots()
+    ax.pie(task_counts, labels=statuses, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')
+    st.pyplot(fig)
+
+    st.markdown("---")
+
+    # Overall task completion progress
+    total_tasks = sum(task_counts)
+    completed_tasks = len(status_columns["DONE"]) + len(status_columns["ARCHIVED"])
+    st.subheader("Overall Task Completion")
+    st.progress(completed_tasks / total_tasks if total_tasks > 0 else 0)
+
+    # Show task details with progress bars and colored labels
     columns = st.columns(len(status_columns))
     for idx, (status, tasks) in enumerate(status_columns.items()):
         with columns[idx]:
             st.subheader(status)
+            st.progress(len(tasks) / total_tasks if total_tasks > 0 else 0)
             for task_info in tasks:
                 with st.expander(task_info['title']):
                     st.write(f"**Priority:** {task_info['priority']}")
@@ -146,16 +175,19 @@ def display_project(project_title):
                     if new_status != task_info['status']:
                         handle_move_task(project_title, task_info['title'], new_status)
 
-                    if st.button(f"Edit: {task_info['title']}", key=f"edit_{task_info['title']}"):
-                        st.session_state['current_task'] = task_info['title']
-                        st.session_state['current_project'] = project_title
-                        st.session_state['page'] = 'edit_task'
-                        st.experimental_rerun()
-
-                    if st.button(f"Delete: {task_info['title']}", key=f"delete_{task_info['title']}"):
-                        handle_delete_task(project_title, task_info['title'])
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        if st.button(f"Edit: {task_info['title']}", key=f"edit_{task_info['title']}"):
+                            st.session_state['current_task'] = task_info['title']
+                            st.session_state['current_project'] = project_title
+                            st.session_state['page'] = 'edit_task'
+                            st.experimental_rerun()
+                    with col2:
+                        if st.button(f"Delete: {task_info['title']}", key=f"delete_{task_info['title']}"):
+                            handle_delete_task(project_title, task_info['title'])
 
     st.sidebar.header("Project Actions")
+    st.sidebar.markdown("---")
     if st.sidebar.button("Add Task", key="add_task"):
         st.session_state['page'] = 'add_task'
         st.session_state['current_project'] = project_title
@@ -185,6 +217,7 @@ def handle_move_task(project_title, task_title, new_status):
 
 def add_task(project_title):
     st.header("Add Task")
+    st.markdown("---")
     title = st.text_input("Task Title")
     description = st.text_input("Task Description")
     duration = st.number_input("Task Duration (days)", min_value=1)
@@ -193,6 +226,7 @@ def add_task(project_title):
     if st.button("Add"):
         handle_add_task(project_title, title, description, duration, priority, status)
 
+    st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
         st.experimental_rerun()
@@ -208,6 +242,7 @@ def handle_add_task(project_title, title, description, duration, priority, statu
 
 def edit_task(project_title):
     st.header("Edit Task")
+    st.markdown("---")
     task_title = st.session_state.get('current_task')
     task = task_manager.get_task(project_title, task_title)
     
@@ -223,6 +258,7 @@ def edit_task(project_title):
     if st.button("Update"):
         handle_edit_task(project_title, task_title, new_title, new_description, new_end_date, new_priority)
 
+    st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
         st.experimental_rerun()
@@ -239,10 +275,12 @@ def handle_edit_task(project_title, task_title, new_title, new_description, new_
 
 def delete_task(project_title):
     st.header("Delete Task")
+    st.markdown("---")
     task_title = st.text_input("Task Title to Delete")
     if st.button("Delete"):
         handle_delete_task(project_title, task_title)
 
+    st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
         st.experimental_rerun()
@@ -257,6 +295,7 @@ def handle_delete_task(project_title, task_title):
 
 def admin_panel():
     st.header("Admin Panel")
+    st.markdown("---")
     users = user_manager.get_members()
     if not users:
         st.write("No users found!")
@@ -268,12 +307,14 @@ def admin_panel():
             rows.append([user_data["username"], user_data["email"], str(user_data["is_active"]), str(user_data["is_admin"])])
         st.table(rows)
 
+    st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
         st.experimental_rerun()
 
 def login_dialog():
     st.header("Login")
+    st.markdown("---")
     username = st.text_input("Enter your username")
     password = st.text_input("Enter your password", type="password")
     if st.button("Login"):
@@ -292,6 +333,7 @@ def login_dialog():
 
 def register_dialog():
     st.header("Register")
+    st.markdown("---")
     username = st.text_input("Choose a username")
     password = st.text_input("Choose a password", type="password")
     email = st.text_input("Enter your email")
@@ -326,6 +368,7 @@ def manage_members(project_title):
     all_users = [user["username"] for user in users_data["users"]]
 
     st.header(f"Manage Members for Project: {project_title}")
+    st.markdown("---")
     members = project.get("members", [])
     admin_user = list(next((member for member in members if "owner" in member.values()), None).keys())[0]
     member_usernames = [list(member.keys())[0] for member in members]
@@ -335,6 +378,7 @@ def manage_members(project_title):
     st.subheader("Current Members")
     st.table([[username, list(role.values())[0]] for username, role in zip(member_usernames, members)])
 
+    st.markdown("---")
     st.subheader("Add Member")
     if not users_to_add:
         st.write("No users available to add.")
@@ -348,12 +392,14 @@ def manage_members(project_title):
     member_rows = [[list(member.keys())[0], list(member.values())[0]] for member in members]
     all_user_rows = [[user, ""] for user in all_users if user not in member_usernames]
 
+    st.markdown("---")
     st.subheader("Remove Member")
     removable_members = [username for username in [list(member.keys())[0] for member in members] if username != admin_user]
     user_to_remove = st.selectbox("Select Member to Remove", removable_members)
     if st.button("Remove Member"):
         handle_remove_member(project_title, user_to_remove)
 
+    st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
         st.experimental_rerun()
@@ -376,6 +422,7 @@ def handle_remove_member(project_title, username):
 
 def manage_assignees(project_title):
     st.header("Manage Assignees and Comments")
+    st.markdown("---")
 
     project = project_manager.get_project(project_title)
     if not project:
@@ -410,6 +457,7 @@ def manage_assignees(project_title):
 
 def manage_assignees_for_task(project_title, task_title, status):
     st.header(f"Manage Assignees and Comments for Task: {task_title}")
+    st.markdown("---")
 
     project = project_manager.get_project(project_title)
     if not project:
@@ -425,6 +473,7 @@ def manage_assignees_for_task(project_title, task_title, status):
         return
 
     st.subheader("Manage Assignees")
+    st.markdown("---")
     assignees = task.get("assignees", [])
     project_members = [member for member_dict in project.get("members", []) for member in member_dict.keys()]
 
@@ -442,6 +491,7 @@ def manage_assignees_for_task(project_title, task_title, status):
                 st.experimental_rerun()
 
     st.subheader("Manage Comments")
+    st.markdown("---")
     comments = task.get("comments", [])
 
     new_comment = st.text_area("New Comment")
@@ -453,17 +503,22 @@ def manage_assignees_for_task(project_title, task_title, status):
 
     if comments:
         for i, comment in enumerate(comments):
-            st.markdown(f"**Comment {i + 1} by {comment['author']} on {comment['timestamp']}**")
-            st.write(comment['comment'])
-            if st.button(f"Edit Comment {i + 1}", key=f"edit_comment_{i}"):
-                new_comment_text = st.text_area(f"Edit Comment {i + 1}", value=comment['comment'], key=f"new_comment_text_{i}")
-                if st.button(f"Save Comment {i + 1}", key=f"save_comment_{i}"):
-                    task_manager.edit_comment(project_title, task_title, i, new_comment_text)
+            st.markdown(f"**Comment {i + 1} by {comment['author']} on {datetime.strptime(comment['timestamp'], '%Y-%m-%d %H:%M:%S').strftime('%B %d, %Y %H:%M:%S')}**")
+            col1, col2, col3 = st.columns([6, 1, 1])
+            with col1:
+                st.write(f"{comment['comment']}")
+            with col2:
+                if st.button("Edit", key=f"edit_comment_{i}"):
+                    new_comment_text = st.text_area(f"Edit Comment {i + 1}", value=comment['comment'], key=f"new_comment_text_{i}")
+                    if st.button(f"Save", key=f"save_comment_{i}"):
+                        task_manager.edit_comment(project_title, task_title, i, new_comment_text)
+                        st.experimental_rerun()
+            with col3:
+                if st.button("Delete", key=f"delete_comment_{i}"):
+                    task_manager.delete_comment(project_title, task_title, i)
                     st.experimental_rerun()
-            if st.button(f"Delete Comment {i + 1}", key=f"delete_comment_{i}"):
-                task_manager.delete_comment(project_title, task_title, i)
-                st.experimental_rerun()
 
+    st.markdown("---")
     if st.button("Back to Task Selection"):
         del st.session_state['selected_task']
         st.experimental_rerun()
@@ -475,6 +530,7 @@ def manage_assignees_for_task(project_title, task_title, status):
 
 def main_menu():
     st.header("Main Menu")
+    st.markdown("---")
     if st.button("Project List"):
         st.session_state['page'] = 'project_list'
         st.experimental_rerun()
@@ -493,6 +549,7 @@ def main_menu():
 
 def main():
     st.title("Welcome to the Trellomize app!")
+    st.markdown("---")
     if 'page' not in st.session_state:
         st.session_state['page'] = 'login'
     if st.session_state['page'] == 'login':
