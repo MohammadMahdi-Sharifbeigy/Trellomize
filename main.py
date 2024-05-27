@@ -1,8 +1,7 @@
 import bcrypt
 import json
-import os
 import re
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import streamlit as st
 from manager import ProjectManager, TaskManager, UserManager
 
@@ -113,19 +112,6 @@ def display_project(project_title):
 
     st.header(f"Project: {project_title}")
 
-    with open("index.html", "r") as f:
-        html_code = f.read()
-
-    with open("style.css", "r") as f:
-        css_code = f.read()
-
-    with open("script.js", "r") as f:
-        js_code = f.read()
-
-    st.markdown(html_code, unsafe_allow_html=True)
-    st.markdown(f'<style>{css_code}</style>', unsafe_allow_html=True)
-    st.markdown(f'<script>{js_code}</script>', unsafe_allow_html=True)
-
     status_columns = {
         "TODO": [],
         "DOING": [],
@@ -139,7 +125,9 @@ def display_project(project_title):
                 "title": task['title'],
                 "assignees": ", ".join(task.get('assignees', [])),
                 "priority": task['priority'],
-                "end_date": task['end_date']
+                "end_date": task['end_date'],
+                "status": status,
+                "description": task.get('description', '')
             }
             status_columns[status].append(task_info)
 
@@ -147,25 +135,32 @@ def display_project(project_title):
     for idx, (status, tasks) in enumerate(status_columns.items()):
         with columns[idx]:
             st.subheader(status)
-            st.markdown(f'<div class="status-column" ondrop="drop(event, \'{status}\')" ondragover="allowDrop(event)"><div class="dropzone">', unsafe_allow_html=True)
             for task_info in tasks:
-                task_id = f"task_{status.lower()}_{task_info['title'].replace(' ', '_')}"
-                task_html = f"""
-                <div id="{task_id}" class="task-box" draggable="true" ondragstart="drag(event)" onclick="showTaskOptions('{task_id}')">
-                    <strong>{task_info['title']}</strong><br>
-                    <em>Assignees: {task_info['assignees']}</em><br>
-                    Priority: {task_info['priority']}<br>
-                    Due Date: {task_info['end_date']}
-                </div>
-                """
-                st.markdown(task_html, unsafe_allow_html=True)
-            st.markdown('</div></div>', unsafe_allow_html=True)
-
-            for task_info in tasks:
-                if st.button(f"Details: {task_info['title']}", key=f"details_{task_info['title'].replace(' ', '_')}"):
+                st.markdown(f"""
+                    <div class="task-box">
+                        <strong>{task_info['title']}</strong><br>
+                        <em>Assignees: {task_info['assignees']}</em><br>
+                        Priority: {task_info['priority']}<br>
+                        Due Date: {task_info['end_date']}
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button(f"Details: {task_info['title']}", key=f"details_{task_info['title']}"):
                     st.session_state['popup_task'] = task_info
                     st.session_state['show_popup'] = True
+
+                new_status = st.selectbox(f"Move {task_info['title']} to", options=["TODO", "DOING", "DONE", "ARCHIVED"], index=["TODO", "DOING", "DONE", "ARCHIVED"].index(task_info['status']), key=f"move_{task_info['title']}")
+                if new_status != task_info['status']:
+                    handle_move_task(project_title, task_info['title'], new_status)
+
+                if st.button(f"Edit: {task_info['title']}", key=f"edit_{task_info['title']}"):
+                    st.session_state['current_task'] = task_info['title']
+                    st.session_state['current_project'] = project_title
+                    st.session_state['page'] = 'edit_task'
                     st.experimental_rerun()
+
+                if st.button(f"Delete: {task_info['title']}", key=f"delete_{task_info['title']}"):
+                    handle_delete_task(project_title, task_info['title'])
 
     if st.session_state.get('show_popup', False):
         task = st.session_state['popup_task']
@@ -173,28 +168,8 @@ def display_project(project_title):
         st.write(f"**Priority:** {task['priority']}")
         st.write(f"**Assignees:** {task['assignees']}")
         st.write(f"**Due Date:** {task['end_date']}")
-        st.write(f"**Description:** {task.get('description', '')}")
-
-        if st.button("Edit", key=f"edit_{task['title']}"):
-            st.session_state['current_task'] = task['title']
-            st.session_state['current_project'] = project_title
-            st.session_state['page'] = 'edit_task'
-            st.experimental_rerun()
-
-        if st.button("Move", key=f"move_{task['title']}"):
-            st.session_state['current_task'] = task['title']
-            st.session_state['current_project'] = project_title
-            st.session_state['page'] = 'move_task'
-            st.experimental_rerun()
-
-        if st.button("Delete", key=f"delete_{task['title']}"):
-            if st.button("Confirm", key=f"confirm_delete_{task['title']}"):
-                st.session_state['current_task'] = task['title']
-                st.session_state['page'] = 'delete_task'
-                st.session_state['current_project'] = project_title
-                st.experimental_rerun()
-
-        if st.button("Close", key=f"close_{task['title']}"):
+        st.write(f"**Description:** {task['description']}")
+        if st.button("Close"):
             st.session_state['show_popup'] = False
             st.experimental_rerun()
 
@@ -218,13 +193,21 @@ def display_project(project_title):
         st.session_state['page'] = 'project_list'
         st.experimental_rerun()
 
+def handle_move_task(project_title, task_title, new_status):
+    try:
+        task_manager.move_task(project_title, task_title, new_status)
+        st.success(f"Task '{task_title}' moved to '{new_status}'")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error moving task: {e}")
+
 def add_task(project_title):
     st.header("Add Task")
     title = st.text_input("Task Title")
     description = st.text_input("Task Description")
     duration = st.number_input("Task Duration (days)", min_value=1)
     priority = st.selectbox("Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"])
-    status = st.selectbox("status", ["TO DO", "DOING", "DONE", "ARCHIVED"])
+    status = st.selectbox("Status", ["TODO", "DOING", "DONE", "ARCHIVED"])
     if st.button("Add"):
         handle_add_task(project_title, title, description, duration, priority, status)
 
@@ -243,20 +226,28 @@ def handle_add_task(project_title, title, description, duration, priority, statu
 
 def edit_task(project_title):
     st.header("Edit Task")
-    task_title = st.text_input("Task Title to Edit")
-    new_title = st.text_input("New Title (optional)")
-    new_description = st.text_input("New Description (optional)")
-    new_duration = st.number_input("New Duration (days, optional)", min_value=1)
-    new_priority = st.selectbox("Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"])
+    task_title = st.session_state.get('current_task')
+    task = task_manager.get_task(project_title, task_title)
+    
+    if not task:
+        st.error("Task not found!")
+        return
+
+    new_title = st.text_input("New Title", value=task['title'])
+    new_description = st.text_input("New Description", value=task.get('description', ''))
+    new_end_date = st.date_input("New End Date", value=datetime.strptime(task['end_date'], "%Y-%m-%d"))
+    new_priority = st.selectbox("Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"], index=["CRITICAL", "HIGH", "MEDIUM", "LOW"].index(task['priority']))
+    
     if st.button("Update"):
-        handle_edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
+        handle_edit_task(project_title, task_title, new_title, new_description, new_end_date, new_priority)
 
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
         st.experimental_rerun()
 
-def handle_edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority):
+def handle_edit_task(project_title, task_title, new_title, new_description, new_end_date, new_priority):
     try:
+        new_duration = (new_end_date - datetime.now().date()).days
         task_manager.edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
         st.success(f"Task '{task_title}' updated successfully")
         st.session_state['page'] = 'project_detail'
@@ -264,25 +255,6 @@ def handle_edit_task(project_title, task_title, new_title, new_description, new_
     except Exception as e:
         st.error(f"Error updating task: {e}")
 
-def move_task(project_title):
-    st.header("Move Task")
-    task_title = st.text_input("Task Title to Move")
-    new_status = st.selectbox("New Status", ["TODO", "DOING", "DONE", "ARCHIVED"])
-    if st.button("Move"):
-        handle_move_task(project_title, task_title, new_status)
-
-    if st.button("Back to Project"):
-        st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
-
-def handle_move_task(project_title, task_title, new_status):
-    try:
-        task_manager.move_task(project_title, task_title, new_status)
-        st.success(f"Task '{task_title}' moved to '{new_status}'")
-        st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Error moving task: {e}")
 
 def delete_task(project_title):
     st.header("Delete Task")
@@ -298,7 +270,6 @@ def handle_delete_task(project_title, task_title):
     try:
         task_manager.delete_task(project_title, task_title)
         st.success(f"Task '{task_title}' deleted successfully")
-        st.session_state['page'] = 'project_detail'
         st.experimental_rerun()
     except Exception as e:
         st.error(f"Error deleting task: {e}")
@@ -514,22 +485,6 @@ def manage_assignees_for_task(project_title, task_title, status):
         st.session_state['page'] = 'project_detail'
         st.session_state['current_project'] = project_title
         st.experimental_rerun()
-
-def handle_add_assignee(project_title, task_title, username):
-    try:
-        task_manager.assign_member(project_title, task_title, username)
-        st.success(f"User '{username}' assigned to task '{task_title}' successfully")
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Error assigning user to task: {e}")
-
-def handle_remove_assignee(project_title, task_title, username):
-    try:
-        task_manager.remove_assignee_from_task(project_title, task_title, username)
-        st.success(f"User '{username}' removed from task '{task_title}' successfully")
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Error removing user from task: {e}")
 
 def main_menu():
     st.header("Main Menu")

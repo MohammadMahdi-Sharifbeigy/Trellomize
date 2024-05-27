@@ -406,7 +406,7 @@ class TaskManager(DataManager):
                 if task["title"] == task_title:
                     task["title"] = new_title if new_title else task["title"]
                     task["description"] = new_description if new_description else task["description"]
-                    task["end_date"] = (task["start_date"] + timedelta(days=new_duration)).isoformat() if new_duration else task["end_date"]
+                    task["end_date"] = (datetime.strptime(task["start_date"], "%Y-%m-%d").date() + timedelta(days=new_duration)).isoformat() if new_duration else task["end_date"]
                     task["priority"] = new_priority if new_priority else task["priority"]
                     self._save_data(self.data, self.data_filename)
                     return
