@@ -152,16 +152,23 @@ def display_project(project_title):
     if sum(task_counts) == 0:
         st.write("No tasks available to display in the pie chart.")
     else:
-
         explode = [0.1 if status == "TODO" else 0.07 if status == "DOING" else 0.04 if status == "DONE" else 0.02 for status in statuses]
-
         colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99']
 
+        def autopct_format(values):
+            def my_format(pct):
+                total = sum(values)
+                val = int(round(pct*total/100.0))
+                if val > 0:
+                    return '{p:.1f}%'.format(p=pct)
+                else:
+                    return ''
+            return my_format
+
         fig, ax = plt.subplots()
-        wedges, texts, autotexts = ax.pie(task_counts, autopct='%1.1f%%', startangle=90, explode=explode, colors=colors, shadow=True)
+        wedges, texts, autotexts = ax.pie(task_counts, autopct=autopct_format(task_counts), startangle=90, explode=explode, colors=colors, shadow=True)
 
         legend = ax.legend(wedges, statuses, title="Statuses", bbox_to_anchor=(1, 0, 0.5, 1), loc="center left", facecolor='grey')
-
         legend.get_title().set_color('white')
 
         ax.axis('equal')
