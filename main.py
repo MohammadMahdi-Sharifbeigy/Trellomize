@@ -605,11 +605,19 @@ def main():
                 password = Prompt.ask("Choose a password", password=True)
                 while len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
                     password = Prompt.ask("Password must be at least 8 characters long, please try again", password=True)
+                    if Prompt.ask("Proceed with registration? (yes/no)", default="yes") == "no":
+                        console.print("Registration canceled.", style="bold magenta")
+                        logger.info("User canceled registration")
+                        return
                 email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
                 email = Prompt.ask("Enter your email")
-                # check if email is in right email format: username@domain.extension
                 while not re.match(email_regex, email):
+                    if Prompt.ask("Proceed with registration? (yes/no)", default="yes") == "no":
+                        console.print("Registration canceled.", style="bold magenta")
+                        logger.info("User canceled registration")
+                        return
                     email = Prompt.ask("Enter a valid email")
+
                 if user_manager.create_user(username=username, password=password, email=email):
                     clear_screen()
                     console.print("Registration successful!", style="info")
@@ -619,16 +627,20 @@ def main():
                     clear_screen()
                     console.print("Registration failed, please try again.", style="danger")
                     logger.warning(f"Registration attempt failed for user {username}")
+
             elif user_choice == "exit":
                 clear_screen()
                 console.print("Exiting the app. Goodbye!", style="bold magenta")
                 logger.info("Application exited by user")
                 return
+
         except Exception as e:
             clear_screen()
             console.print(f"An error occurred: {e}", style="danger")
             logger.error(f"Error during login/registration: {e}")
+
     main_menu(is_admin, user["username"] if user else None)
+
 
 def main_menu(is_admin=False, current_user=None):
     clear_screen()
