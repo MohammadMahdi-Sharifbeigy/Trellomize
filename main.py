@@ -332,10 +332,32 @@ def admin_panel():
         df = pd.DataFrame(rows, columns=columns)
         st.table(df)
 
+    user_options = [user_manager.get_user(user)["username"] for user in users]
+    
+    # Dropdown to select a user
+    selected_user = st.selectbox("Select User", user_options)
+
+    if selected_user:
+        user_data = user_manager.get_user(selected_user)
+        if user_data["is_active"]:
+            if st.button(f"Deactivate {selected_user}"):
+                handle_toggle_active(selected_user, False)
+        else:
+            if st.button(f"Activate {selected_user}"):
+                handle_toggle_active(selected_user, True)
+
     st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
-        st.rerun()
+        st.experimental_rerun()
+
+def handle_toggle_active(username, is_active):
+    try:
+        user_manager.update_user(username, {"is_active": is_active})
+        st.success(f"User '{username}' {'activated' if is_active else 'deactivated'} successfully")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error updating user status: {e}")
 
 def login_dialog():
     st.title("Welcome to the Trellomize app!")
@@ -370,7 +392,7 @@ def register_dialog():
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             st.error("Invalid email address!")
             return
-        if not re.match(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$", password):
+        if len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
             st.error("Password must be at least 8 characters long and contain at least one letter and one number!")
             return
         if user_manager.get_user(username):
