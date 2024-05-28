@@ -205,7 +205,7 @@ def display_project(project_title):
                         st.session_state['current_task'] = task_info['title']
                         st.session_state['current_project'] = project_title
                         st.session_state['page'] = 'edit_task'
-                        st.experimental_rerun()
+                        st.rerun()
 
                     if st.button("Delete", key=f"delete_{task_info['title']}"):
                         handle_delete_task(project_title, task_info['title'])
@@ -349,13 +349,13 @@ def admin_panel():
     st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_toggle_active(username, is_active):
     try:
         user_manager.update_user(username, {"is_active": is_active})
         st.success(f"User '{username}' {'activated' if is_active else 'deactivated'} successfully")
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error updating user status: {e}")
 
