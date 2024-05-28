@@ -340,6 +340,7 @@ def admin_panel():
         st.rerun()
 
 def login_dialog():
+    st.title("Welcome to the Trellomize app!")
     st.header("Login")
     st.markdown("---")
     username = st.text_input("Enter your username")
@@ -383,6 +384,10 @@ def register_dialog():
             st.rerun()
         else:
             st.error("Registration failed, please try again.")
+    
+    if st.button("Back to Login"):
+        st.session_state['page'] = 'login'
+        st.rerun()
 
 def manage_members(project_title):
     project = project_manager.get_project(project_title)
@@ -478,6 +483,11 @@ def manage_assignees(project_title):
     if st.button("Manage Assignees and Comments for Selected Task"):
         st.session_state['selected_task'] = selected_task_title
         st.rerun()
+    
+    if st.button("Back to Project Detail"):
+        st.session_state['page'] = 'project_detail'
+        st.session_state['current_project'] = project_title
+        st.rerun()
 
     if 'selected_task' in st.session_state:
         selected_task_title = st.session_state['selected_task']
@@ -553,11 +563,6 @@ def manage_assignees_for_task(project_title, task_title, status):
         del st.session_state['selected_task']
         st.rerun()
 
-    if st.button("Back to Project Detail"):
-        st.session_state['page'] = 'project_detail'
-        st.session_state['current_project'] = project_title
-        st.rerun()
-
 def main_menu():
     st.header("Main Menu")
     st.markdown("---")
@@ -578,8 +583,6 @@ def main_menu():
         logout()
 
 def main():
-    st.title("Welcome to the Trellomize app!")
-    st.markdown("---")
     if 'page' not in st.session_state:
         st.session_state['page'] = 'login'
     if st.session_state['page'] == 'login':
