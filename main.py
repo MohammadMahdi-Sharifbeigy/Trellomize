@@ -216,9 +216,20 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     input("Press any key to continue...")
                     continue
                 try:
-                    task_title = Prompt.ask("Enter task title")
+                    task_title = Prompt.ask("Enter task title, or press enter to go back")
+                    if task_title == "":
+                        continue
+                    while task_manager.get_task(project_title, task_title):
+                        console.print(f"Task '{task_title}' already exists! Please enter a different title.", style="warning")
+                        task_title = Prompt.ask("Enter task title")
+                    while not task_title:
+                        console.print("Task title cannot be empty!", style="warning")
+                        task_title = Prompt.ask("Enter task title")
                     task_description = Prompt.ask("Enter task description (optional)", default="")
-                    task_duration = int(Prompt.ask("Enter task duration (days)"))
+                    task_duration = int(Prompt.ask("Enter task duration (days)", default="1"))
+                    while task_duration <= 0:
+                        console.print("Duration must be greater than 0!", style="warning")
+                        task_duration = int(Prompt.ask("Enter task duration (days)"))
                     task_priority = Prompt.ask("Enter task priority (CRITICAL, HIGH, MEDIUM, LOW)", choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"], default="MEDIUM")
 
                     task = {
@@ -240,7 +251,9 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     input("Press any key to continue...")
                     continue
                 try:
-                    task_title = Prompt.ask("Enter task title to edit")
+                    task_title = Prompt.ask("Enter task title to edit, or press enter to go back")
+                    if task_title == "":
+                        continue
                     new_title = Prompt.ask("Enter new title (optional)")
                     new_description = Prompt.ask("Enter new description (optional)")
                     new_duration = Prompt.ask("Enter new duration (days) (optional)")
@@ -257,7 +270,9 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     input("Press any key to continue...")
                     continue
                 try:
-                    task_title = Prompt.ask("Enter task title to move")
+                    task_title = Prompt.ask("Enter task title to move, or press enter to go back")
+                    if task_title == "":
+                        continue
                     new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED)", choices=["TODO", "DOING", "DONE", "ARCHIVED"])
                     task_manager.move_task(project_title, task_title, new_status)
                     console.print(f"Task '{task_title}' moved to {new_status} successfully!", style="success")
@@ -272,7 +287,9 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     input("Press any key to continue...")
                     continue
                 try:
-                    task_title = Prompt.ask("Enter task title to delete")
+                    task_title = Prompt.ask("Enter task title to delete, or press enter to go back")
+                    if task_title == "":
+                        continue
                     task_manager.delete_task(project_title, task_title)
                     console.print(f"Task '{task_title}' deleted successfully!", style="success")
                     logger.info(f"Task '{task_title}' deleted from project '{project_title}' by {current_user}")
@@ -293,7 +310,9 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     else:
                         for member in avl_members:
                             console.print(member)
-                        member_name = Prompt.ask("Enter member's name to add")
+                        member_name = Prompt.ask("Enter member's name to add, or press enter to go back")
+                        if member_name == "":
+                            continue
                         while member_name not in avl_members and member_name != '0':
                             console.print(f"Member '{member_name}' not found! Enter 0 to exit", style="danger")
                             member_name = Prompt.ask("Enter member's name to add")
@@ -321,7 +340,9 @@ def display_project(project_title, project_manager, task_manager, current_user):
                         for name, role in member.items():
                             console.print(f"{name} ({role})")
                             project_members_name.append(name)
-                    member_name = Prompt.ask("Enter member's name to remove")
+                    member_name = Prompt.ask("Enter member's name to remove, or press enter to go back")
+                    if member_name == "":
+                        continue
                     while member_name not in project_members_name and member_name != '0':
                         console.print(f"Member '{member_name}' is not part of the project! Enter 0 to exit", style="danger")
                         member_name = Prompt.ask("Enter member's name to remove")
@@ -339,7 +360,9 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     input("Press any key to continue...")
                     continue
                 try:
-                    task_title = Prompt.ask("Enter task title to assign a member")
+                    task_title = Prompt.ask("Enter task title to assign a member, or press enter to go back")
+                    if task_title == "":
+                        continue
                     console.print("Members in the project:")
                     for member in project_manager.get_project(project_title)["members"]:
                         for name, role in member.items():
@@ -363,7 +386,9 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     input("Press any key to continue...")
                     continue
                 try:
-                    task_title = Prompt.ask("Enter task title to remove assignee")
+                    task_title = Prompt.ask("Enter task title to remove assignee, or press enter to go back")
+                    if task_title == "":
+                        continue
                     console.print("Assignees in the task:")
                     for assignee in task_manager.get_task(project_title, task_title)["assignees"]:
                         console.print(assignee)
