@@ -200,17 +200,15 @@ def display_project(project_title):
                     new_status = st.selectbox(f"Move {task_info['title']} to", options=["TODO", "DOING", "DONE", "ARCHIVED"], index=["TODO", "DOING", "DONE", "ARCHIVED"].index(task_info['status']), key=f"move_{task_info['title']}")
                     if new_status != task_info['status']:
                         handle_move_task(project_title, task_info['title'], new_status)
+                        
+                    if st.button("Edit", key=f"edit_{task_info['title']}"):
+                        st.session_state['current_task'] = task_info['title']
+                        st.session_state['current_project'] = project_title
+                        st.session_state['page'] = 'edit_task'
+                        st.experimental_rerun()
 
-                    col1, col2 = st.columns([1, 1])
-                    with col1:
-                        if st.button(f"Edit: {task_info['title']}", key=f"edit_{task_info['title']}"):
-                            st.session_state['current_task'] = task_info['title']
-                            st.session_state['current_project'] = project_title
-                            st.session_state['page'] = 'edit_task'
-                            st.rerun()
-                    with col2:
-                        if st.button(f"Delete: {task_info['title']}", key=f"delete_{task_info['title']}"):
-                            handle_delete_task(project_title, task_info['title'])
+                    if st.button("Delete", key=f"delete_{task_info['title']}"):
+                        handle_delete_task(project_title, task_info['title'])
 
     st.sidebar.header("Project Actions")
     st.sidebar.markdown("---")
