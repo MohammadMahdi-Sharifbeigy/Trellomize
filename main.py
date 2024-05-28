@@ -85,8 +85,15 @@ def create_new_project(current_user):
     start_date = Prompt.ask(
         "Enter the start date of the project (dd/mm/yyyy)"
     )
+    while True:
+        try:
+            datetime.strptime(start_date, "%d/%m/%Y")
+            break
+        except ValueError:
+            start_date = Prompt.ask("Invalid date format. Enter the start date of the project (dd/mm/yyyy)")
     try:
         project = project_manager.create_project(title, start_date, current_user)
+        clear_screen()
         console.print(f"New project created successfully with Title: {project['title']}", style="success")
         logger.info(f"Project '{title}' created successfully by {current_user}")
     except Exception as e:
