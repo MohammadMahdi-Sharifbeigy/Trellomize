@@ -403,7 +403,10 @@ def manage_members(project_title):
     users_to_add = [username for username in all_users if username not in member_usernames]
     
     st.subheader("Current Members")
-    st.table([[username, list(role.values())[0]] for username, role in zip(member_usernames, members)])
+    rows = [[username, list(role.values())[0]] for username, role in zip(member_usernames, members)]
+    columns = ["Username", "Role"]
+    df = pd.DataFrame(rows, columns=columns)
+    st.table(df)
 
     st.markdown("---")
     st.subheader("Add Member")
