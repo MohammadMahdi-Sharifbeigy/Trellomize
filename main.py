@@ -1,10 +1,13 @@
-import bcrypt
 import json
 import re
 from datetime import datetime, timedelta
-import streamlit as st
+
+import bcrypt
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import streamlit as st
+
 from manager import ProjectManager, TaskManager, UserManager
 
 user_manager = UserManager()
@@ -328,7 +331,8 @@ def admin_panel():
         for user in users:
             user_data = user_manager.get_user(user)
             rows.append([user_data["username"], user_data["email"], str(user_data["is_active"]), str(user_data["is_admin"])])
-        st.table(rows)
+        df = pd.DataFrame(rows, columns=columns)
+        st.table(df)
 
     st.markdown("---")
     if st.button("Back to Main Menu"):
