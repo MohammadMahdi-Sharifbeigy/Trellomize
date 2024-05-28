@@ -457,59 +457,6 @@ def handle_comments(project_title, task_manager, current_user):
             break
         input("Press any key to continue...")
 
-def add_task_to_board(project_title):
-    # Collect task details from the user
-    task_title = Prompt.ask("Enter task title:")
-    description = input("Enter task description (optional):")
-    duration = int(input("Enter task duration (days):"))
-    priority = Prompt.ask("Enter task priority (CRITICAL, HIGH, MEDIUM, LOW):",choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"])
-    status = "TODO"  # Default status for new tasks
-
-    # Create and add the task using the task manager
-    task_manager.add_task(project_title, task_title, description, duration, priority, status)
-    logger.info(f"Task '{task_title}' added to project '{project_title}'")
-    # Update the project board display
-    display_project(project_title)
-
-def move_task_on_board(project_title):
-    task_table = Table(title="Available Tasks", style="bold magenta")
-    task_table.add_column("ID", style="dim")
-    task_table.add_column("Title", style="italic")
-
-    for status, tasks in project_manager.get_project(project_title)["tasks"].items():
-        for task_title, task in enumerate(tasks):
-            task_table.add_row(task["title"])
-    console.print(task_table)
-    console.print("")
-
-    task_title = Prompt.ask("Enter task Title to move:")
-    new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED):",choices=["TODO", "DOING", "DONE", "ARCHIVED"],)
-
-    task_manager.move_task(project_title, task_title, new_status)
-    logger.info(f"Task '{task_title}' moved to {new_status} in project '{project_title}'")
-
-    display_project(project_title)
-
-def delete_task_from_board(project_title):
-    task_table = Table(title="Available Tasks", style="bold magenta")
-
-    for status, tasks in project_manager.get_project(project_title)["tasks"].items():
-        for task_title, task in enumerate(tasks):
-            task_table.add_row(task["title"])
-    console.print(task_table)
-
-    console.print("")
-
-    task_title = Prompt.ask("Enter task Title to delete:")
-    try:
-        task_manager.delete_task(project_title, task_title)
-        logger.info(f"Task '{task_title}' deleted from project '{project_title}'")
-    except ValueError as e:
-        console.print(e, style="danger")
-        logger.error(f"Error deleting task '{task_title}' from project '{project_title}': {e}")
-    else:
-        display_project(project_title)
-
 def admin_panel():
     console.print("Admin Panel", style="info")
     while True:
