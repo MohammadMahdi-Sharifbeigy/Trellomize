@@ -412,7 +412,7 @@ def register_dialog():
         if len(username) == 0:
             st.error("Username cannot be empty!")
             return
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
             st.error("Invalid email address!")
             return
         if len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
