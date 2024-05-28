@@ -590,7 +590,10 @@ def main():
         user = None
         try:
             if user_choice == "login":
-                username = Prompt.ask("Enter your username")
+                username = Prompt.ask("Enter your username, or enter 'exit' to go back")
+                if username == "exit":
+                    clear_screen()
+                    continue
                 password = Prompt.ask("Enter your password", password=True)
                 login_result, user = login(username, password)
                 is_admin = user["is_admin"] if user else False
@@ -601,14 +604,13 @@ def main():
                 else:
                     console.print(":x: Login failed, please try again.", style="danger")
             elif user_choice == "register":
-                username = Prompt.ask("Choose a username")
+                username = Prompt.ask("Choose a username, enter 'exit' to go back")
+                if username == "exit":
+                    clear_screen()
+                    continue
                 password = Prompt.ask("Choose a password", password=True)
                 while len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
                     password = Prompt.ask("Password must be at least 8 characters long, please try again", password=True)
-                    if Prompt.ask("Proceed with registration? (yes/no)", default="yes") == "no":
-                        console.print("Registration canceled.", style="bold magenta")
-                        logger.info("User canceled registration")
-                        return
                 email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
                 email = Prompt.ask("Enter your email")
                 while not re.match(email_regex, email):
