@@ -587,6 +587,9 @@ def main():
                 if username == "exit":
                     clear_screen()
                     continue
+                while user_manager.get_user(username):
+                    console.print("Username already exists, please choose a different one.", style="warning")
+                    username = Prompt.ask("Choose a username")
                 password = Prompt.ask("Choose a password", password=True)
                 while len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
                     password = Prompt.ask("Password must be at least 8 characters long, please try again", password=True)
