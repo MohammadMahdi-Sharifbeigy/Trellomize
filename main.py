@@ -32,7 +32,7 @@ def login(username, password):
 def logout():
     st.session_state.clear()
     st.session_state['page'] = 'login'
-    st.experimental_rerun()
+    st.rerun()
 
 def display_project_list(current_user):
     user = user_manager.get_user(current_user)
@@ -52,14 +52,14 @@ def display_project_list(current_user):
             if st.button(f"Open {row[0]}", key=f"open_{index}"):
                 st.session_state['current_project'] = row[0]
                 st.session_state['page'] = 'project_detail'
-                st.experimental_rerun()
+                st.rerun()
     else:
         st.write("No projects available!")
 
     st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
-        st.experimental_rerun()
+        st.rerun()
 
 def create_new_project(current_user):
     st.header("Create New Project")
@@ -72,14 +72,14 @@ def create_new_project(current_user):
     st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_create_project(title, start_date, current_user):
     try:
         project = project_manager.create_project(title, start_date, current_user)
         st.success(f"New project created successfully with Title: {project['title']}")
         st.session_state['page'] = 'project_list'
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error creating project: {e}")
 
@@ -99,7 +99,7 @@ def profile_settings(username):
     st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_update_profile(username, password, email):
     updates = {}
@@ -110,7 +110,7 @@ def handle_update_profile(username, password, email):
     try:
         user_manager.update_user(username, updates)
         st.success("Profile updated successfully!")
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error updating profile: {e}")
 
@@ -207,7 +207,7 @@ def display_project(project_title):
                             st.session_state['current_task'] = task_info['title']
                             st.session_state['current_project'] = project_title
                             st.session_state['page'] = 'edit_task'
-                            st.experimental_rerun()
+                            st.rerun()
                     with col2:
                         if st.button(f"Delete: {task_info['title']}", key=f"delete_{task_info['title']}"):
                             handle_delete_task(project_title, task_info['title'])
@@ -217,27 +217,27 @@ def display_project(project_title):
     if st.sidebar.button("Add Task", key="add_task"):
         st.session_state['page'] = 'add_task'
         st.session_state['current_project'] = project_title
-        st.experimental_rerun()
+        st.rerun()
 
     if st.sidebar.button("Manage Members", key="manage_members"):
         st.session_state['page'] = 'manage_members'
         st.session_state['current_project'] = project_title
-        st.experimental_rerun()
+        st.rerun()
         
     if st.sidebar.button("Manage Assignees", key="manage_assignees"):
         st.session_state['page'] = 'manage_assignees'
         st.session_state['current_project'] = project_title
-        st.experimental_rerun()
+        st.rerun()
 
     if st.sidebar.button("Back to Project List", key="back_to_project_list"):
         st.session_state['page'] = 'project_list'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_move_task(project_title, task_title, new_status):
     try:
         task_manager.move_task(project_title, task_title, new_status)
         st.success(f"Task '{task_title}' moved to '{new_status}'")
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error moving task: {e}")
 
@@ -255,14 +255,14 @@ def add_task(project_title):
     st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_add_task(project_title, title, description, duration, priority, status):
     try:
         task_manager.add_task(project_title, title, description, duration, priority, status)
         st.success(f"Task '{title}' added successfully")
         st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error adding task: {e}")
 
@@ -287,7 +287,7 @@ def edit_task(project_title):
     st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_edit_task(project_title, task_title, new_title, new_description, new_end_date, new_priority):
     try:
@@ -295,7 +295,7 @@ def handle_edit_task(project_title, task_title, new_title, new_description, new_
         task_manager.edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
         st.success(f"Task '{task_title}' updated successfully")
         st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error updating task: {e}")
 
@@ -309,13 +309,13 @@ def delete_task(project_title):
     st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_delete_task(project_title, task_title):
     try:
         task_manager.delete_task(project_title, task_title)
         st.success(f"Task '{task_title}' deleted successfully")
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error deleting task: {e}")
 
@@ -337,7 +337,7 @@ def admin_panel():
     st.markdown("---")
     if st.button("Back to Main Menu"):
         st.session_state['page'] = 'main_menu'
-        st.experimental_rerun()
+        st.rerun()
 
 def login_dialog():
     st.header("Login")
@@ -351,12 +351,12 @@ def login_dialog():
             st.session_state['current_user'] = username  # Set current user here
             st.session_state['is_admin'] = user["is_admin"]
             st.session_state['page'] = 'main_menu'
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Login failed, please try again.")
     if st.button("Register"):
         st.session_state['page'] = 'register'
-        st.experimental_rerun()
+        st.rerun()
 
 def register_dialog():
     st.header("Register")
@@ -380,7 +380,7 @@ def register_dialog():
         if user_manager.create_user(username=username, password=password, email=email):
             st.success("Registration successful!")
             st.session_state['page'] = 'login'
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Registration failed, please try again.")
 
@@ -429,13 +429,13 @@ def manage_members(project_title):
     st.markdown("---")
     if st.button("Back to Project"):
         st.session_state['page'] = 'project_detail'
-        st.experimental_rerun()
+        st.rerun()
 
 def handle_add_member(project_title, username, role):
     try:
         project_manager.add_member(project_title, username, role, project_manager)
         st.success(f"User '{username}' added to project '{project_title}' successfully")
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error adding member to project: {e}")
 
@@ -443,7 +443,7 @@ def handle_remove_member(project_title, username):
     try:
         project_manager.remove_member_from_project(project_title, username)
         st.success(f"User '{username}' removed from project '{project_title}' successfully")
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error removing member from project: {e}")
 
@@ -474,7 +474,7 @@ def manage_assignees(project_title):
 
     if st.button("Manage Assignees and Comments for Selected Task"):
         st.session_state['selected_task'] = selected_task_title
-        st.experimental_rerun()
+        st.rerun()
 
     if 'selected_task' in st.session_state:
         selected_task_title = st.session_state['selected_task']
@@ -508,14 +508,14 @@ def manage_assignees_for_task(project_title, task_title, status):
 
     if st.button("Add Assignee"):
         task_manager.assignee_member(project_title, task_title, new_assignee)
-        st.experimental_rerun()
+        st.rerun()
 
     if assignees:
         st.subheader("Current Assignees")
         for assignee in assignees:
             if st.button(f"Remove {assignee}"):
                 task_manager.remove_assignee(project_title, task_title, assignee)
-                st.experimental_rerun()
+                st.rerun()
 
     st.subheader("Manage Comments")
     st.markdown("---")
@@ -526,7 +526,7 @@ def manage_assignees_for_task(project_title, task_title, status):
 
     if st.button("Add Comment"):
         task_manager.add_comment(project_title, task_title, new_comment, current_user)
-        st.experimental_rerun()
+        st.rerun()
 
     if comments:
         for i, comment in enumerate(comments):
@@ -539,38 +539,38 @@ def manage_assignees_for_task(project_title, task_title, status):
                     new_comment_text = st.text_area(f"Edit Comment {i + 1}", value=comment['comment'], key=f"new_comment_text_{i}")
                     if st.button(f"Save", key=f"save_comment_{i}"):
                         task_manager.edit_comment(project_title, task_title, i, new_comment_text)
-                        st.experimental_rerun()
+                        st.rerun()
             with col3:
                 if st.button("Delete", key=f"delete_comment_{i}"):
                     task_manager.delete_comment(project_title, task_title, i)
-                    st.experimental_rerun()
+                    st.rerun()
 
     st.markdown("---")
     if st.button("Back to Task Selection"):
         del st.session_state['selected_task']
-        st.experimental_rerun()
+        st.rerun()
 
     if st.button("Back to Project Detail"):
         st.session_state['page'] = 'project_detail'
         st.session_state['current_project'] = project_title
-        st.experimental_rerun()
+        st.rerun()
 
 def main_menu():
     st.header("Main Menu")
     st.markdown("---")
     if st.button("Project List"):
         st.session_state['page'] = 'project_list'
-        st.experimental_rerun()
+        st.rerun()
     if st.button("Create New Project"):
         st.session_state['page'] = 'create_project'
-        st.experimental_rerun()
+        st.rerun()
     if st.button("Profile Settings"):
         st.session_state['page'] = 'profile_settings'
-        st.experimental_rerun()
+        st.rerun()
     if st.session_state.get('is_admin', False):
         if st.button("Admin Panel"):
             st.session_state['page'] = 'admin_panel'
-            st.experimental_rerun()
+            st.rerun()
     if st.button("Log Out"):
         logout()
 
@@ -611,7 +611,7 @@ def main():
             manage_assignees(project_title)
         else:
             st.session_state['page'] = 'project_list'
-            st.experimental_rerun()
+            st.rerun()
 
 if __name__ == "__main__":
     main()
