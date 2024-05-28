@@ -46,8 +46,8 @@ def display_project_list(current_user):
     if projects:
         columns = ["Title", "Start Date"]
         rows = [[project["title"], project["start_date"]] for project in projects]
-        
-        st.table(rows)
+        df = pd.DataFrame(rows, columns=columns)
+        st.table(df)
         for index, row in enumerate(rows):
             if st.button(f"Open {row[0]}", key=f"open_{index}"):
                 st.session_state['current_project'] = row[0]
