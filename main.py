@@ -36,9 +36,10 @@ def login(username, password):
     else:
         logger.warning(f"Login failed for {username}: incorrect password")
         return False, None
-def logout():
+def logout(current_user):
     st.session_state.clear()
     st.session_state['page'] = 'login'
+    logger.info(f"User {current_user} logged out")
     st.rerun()
 
 def display_project_list(current_user):
@@ -626,8 +627,7 @@ def main_menu():
             st.session_state['page'] = 'admin_panel'
             st.rerun()
     if st.button("Log Out"):
-        logger.info(f"User {current_user} logged out")
-        logout()
+        logout(st.session_state['username'])
 
 def main():
     if 'page' not in st.session_state:
