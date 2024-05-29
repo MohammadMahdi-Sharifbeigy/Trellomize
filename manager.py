@@ -5,15 +5,7 @@ import multiprocessing
 import uuid
 from datetime import date, datetime, timedelta
 from io import StringIO
-
 import bcrypt
-import dash
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-import pandas as pd
-import plotly.express as px
-from dash import dcc, html
-from dash.dependencies import Input, Output
 from rich import print
 
 
