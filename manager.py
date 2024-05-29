@@ -35,84 +35,83 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError("Boolean value expected.")
-
-
-
+    
 # Create main parser
 parser = argparse.ArgumentParser(description="Manage administrative tasks", formatter_class=CustomHelpFormatter)
-
 
 # Create subparsers for each command
 subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
-
 # --- Admin Management ---
-admin_parser = subparsers.add_parser("create-user",help="Create a new administrator account",formatter_class=CustomHelpFormatter,)
-
-
+admin_parser = subparsers.add_parser("create-user",help="Create a new administrator account",formatter_class=CustomHelpFormatter)
 admin_parser.add_argument("--username", required=True, help="Username for the administrator account")
 admin_parser.add_argument("--password", required=True, help="Password for the administrator account")
-admin_parser.add_argument("--is_active",type=str2bool,nargs="?",const=True,default=True,help="Activate the administrator account",)
-admin_parser.add_argument("--email", help="Email address for the administrator (Optional)")
-
+admin_parser.add_argument("--is_active", type=str2bool, nargs="?", const=True, default=True, help="Activate the administrator account")
+admin_parser.add_argument("--email", required=True, help="Email address for the administrator")
 
 # --- Project Management ---
 project_parser = subparsers.add_parser("create-project", help="Create a new project", formatter_class=CustomHelpFormatter)
-
-
 project_parser.add_argument("--title", required=True, help="Project Title")
 project_parser.add_argument("--start_date", required=True, help="Project Start Date (dd/mm/yyyy)")
-
+project_parser.add_argument("--owner", required=True, help="Owner of the project")
 
 # --- Purge Data ---
-project_parser = subparsers.add_parser("purge-data", help="Purge all data")
-
+purge_parser = subparsers.add_parser("purge-data", help="Purge all data")
 
 # --- Task Management ---
 task_parser = subparsers.add_parser("add-task", help="Add a new task", formatter_class=CustomHelpFormatter)
-
-
 task_parser.add_argument("--project_title", required=True, help="Project Title")
-task_parser.add_argument("--title", required=True, help="Task Title")
+task_parser.add_argument("--task_title", required=True, help="Task Title")
 task_parser.add_argument("--description", help="Description (Optional)")
 task_parser.add_argument("--duration", default=1, type=int, help="Duration in days (Optional)")
-task_parser.add_argument("--priority",choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"],default="LOW",help="Task priority (Optional)",)
-task_parser.add_argument("--status",choices=["TODO", "DOING", "DONE", "ARCHIVED"],default="TODO",help="Task status (Optional)",)
+task_parser.add_argument("--priority", choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"], default="MEDIUM", help="Task priority (Optional)")
+task_parser.add_argument("--status", choices=["TODO", "DOING", "DONE", "ARCHIVED"], default="TODO", help="Task status (Optional)")
 
-
-task_parser = subparsers.add_parser("move-task",help="Move a task to a different status",formatter_class=CustomHelpFormatter,)
+task_parser = subparsers.add_parser("move-task", help="Move a task to a different status")
 task_parser.add_argument("--project_title", required=True, help="Project Title")
 task_parser.add_argument("--task_title", required=True, help="Task Title")
-task_parser.add_argument("--new_status",required=True,choices=["TODO", "DOING", "DONE", "ARCHIVED"],help="New task status",)
+task_parser.add_argument("--new_status", required=True, choices=["TODO", "DOING", "DONE", "ARCHIVED"], help="New task status")
 
-
-task_parser = subparsers.add_parser("delete-task", help="Delete a task", formatter_class=CustomHelpFormatter)
+task_parser = subparsers.add_parser("delete-task", help="Delete a task")
 task_parser.add_argument("--project_title", required=True, help="Project Title")
 task_parser.add_argument("--task_title", required=True, help="Task Title")
 
-
-task_parser = subparsers.add_parser("assign-member", help="Assign a user to a task", formatter_class=CustomHelpFormatter)
+task_parser = subparsers.add_parser("assign-member", help="Assign a user to a task")
 task_parser.add_argument("--project_title", required=True, help="Project Title")
 task_parser.add_argument("--task_title", required=True, help="Task Title")
 task_parser.add_argument("--username", required=True, help="Username of the member to assign")
 
+task_parser = subparsers.add_parser("remove_assignee", help="Remove a user from a task")
+task_parser.add_argument("--project_title", required=True, help="Project Title")
+task_parser.add_argument("--task_title", required=True, help="Task Title")
+task_parser.add_argument("--username", required=True, help="Username of the member to assign")
 
 # --- Member Management ---
 member_parser = subparsers.add_parser("add-member", help="Add a user to a project", formatter_class=CustomHelpFormatter)
 member_parser.add_argument("--project_title", required=True, help="Project Title")
 member_parser.add_argument("--username", required=True, help="Username")
 
-
-member_parser = subparsers.add_parser("remove-member-from-project",help="Remove a user from a project",formatter_class=CustomHelpFormatter,)
+member_parser = subparsers.add_parser("remove-member", help="Remove a user from a project")
 member_parser.add_argument("--project_title", required=True, help="Project Title")
 member_parser.add_argument("--username", required=True, help="Username")
 
+# --- Comment Management ---
+add_comment_parser = subparsers.add_parser("add-comment", help="Add a comment to a task")
+add_comment_parser.add_argument("--project_title", required=True, help="Project Title")
+add_comment_parser.add_argument("--task_title", required=True, help="Task Title")
+add_comment_parser.add_argument("--comment_body", required=True, help="Comment body")
+add_comment_parser.add_argument("--author", required=True, help="Author of the comment")
 
-task_parser = subparsers.add_parser("remove_assignee_from_task",help="Remove a user from a task",formatter_class=CustomHelpFormatter,)
-task_parser.add_argument("--project_title", required=True, help="Project Title")
-task_parser.add_argument("--task_title", required=True, help="Task Title")
+edit_comment_parser = subparsers.add_parser("edit-comment", help="Edit a comment on a task")
+edit_comment_parser.add_argument("--project_title", required=True, help="Project Title")
+edit_comment_parser.add_argument("--task_title", required=True, help="Task Title")
+edit_comment_parser.add_argument("--comment_index", required=True, help="Index of the comment to edit")
+edit_comment_parser.add_argument("--new_comment", required=True, help="New comment body")
 
-
+delete_comment_parser = subparsers.add_parser("delete-comment", help="Delete a comment on a task")
+delete_comment_parser.add_argument("--project_title", required=True, help="Project Title")
+delete_comment_parser.add_argument("--task_title", required=True, help="Task Title")
+delete_comment_parser.add_argument("--comment_index", required=True, help="Index of the comment to delete")
 
 class DataManager:
     """
@@ -545,9 +544,9 @@ class TaskManager(DataManager):
 
         return task["comments"]
 
-
 if __name__ == "__main__":
     data_manager = DataManager()
+    data_manager.reload_data()
     user_manager = UserManager()
     project_manager = ProjectManager()
     task_manager = TaskManager()
@@ -555,19 +554,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.command == "create-user":
-        user_manager.create_user(args.username, args.password, args.is_active, args.email, True)
-    elif args.command == "purge-data":
-        confirmation = input("[bold red]Are you sure you want to erase all data? (y/n): ")
-        if confirmation.lower() == 'y':
-            data_manager.purge_data()
-        else:
-            print("Data purge cancelled.")
+        user_manager.create_user(args.username, args.password, args.is_active, args.email)
     elif args.command == "create-project":
-        project_manager.create_project(args.title, args.start_date)
-    elif args.command == "add-member":
-        project_manager.add_member(args.project_title, args.username)
-    elif args.command == "remove-member-from-project":
-        project_manager.remove_member_from_project(args.project_title, args.username)
+        project_manager.create_project(args.title, args.start_date, args.owner)
+    elif args.command == "purge-data":
+        data_manager.purge_data()
     elif args.command == "add-task":
         task_manager.add_task(
             args.project_title,
@@ -579,11 +570,21 @@ if __name__ == "__main__":
         )
     elif args.command == "move-task":
         task_manager.move_task(args.project_title, args.task_title, args.new_status)
-    elif args.command == "assign-member":
-        task_manager.assign_member(args.project_title, args.task_title, args.username)
-    elif args.command == "remove_assignee_from_task":
-        task_manager.remove_assignee_from_task(args.project_title, args.task_title, args.username)
     elif args.command == "delete-task":
         task_manager.delete_task(args.project_title, args.task_title)
+    elif args.command == "assign-member":
+        task_manager.assignee_member(args.project_title, args.task_title, args.username)
+    elif args.command == "remove_assignee":
+        task_manager.remove_assignee(args.project_title, args.task_title, args.username)
+    elif args.command == "add-member":
+        project_manager.add_member(args.project_title, args.username, "member", project_manager)
+    elif args.command == "remove-member":
+        project_manager.remove_member_from_project(args.project_title, args.username)
+    elif args.command == "add-comment":
+        task_manager.add_comment(args.project_title, args.task_title, args.comment_body, args.author)
+    elif args.command == "edit-comment":
+        task_manager.edit_comment(args.project_title, args.task_title, int(args.comment_index), args.new_comment)
+    elif args.command == "delete-comment":
+        task_manager.delete_comment(args.project_title, args.task_title, int(args.comment_index))
     else:
-        print("[red]Invalid command![/]")
+        parser.print_help()
