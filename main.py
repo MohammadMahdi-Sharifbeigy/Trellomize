@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
+from loguru import logger
 
 from manager import ProjectManager, TaskManager, UserManager
 
@@ -14,24 +15,31 @@ user_manager = UserManager()
 project_manager = ProjectManager()
 task_manager = TaskManager()
 
+logger.remove()
+logger.add("app.log", rotation="1 MB", level="DEBUG", format="{time} {level} {message}")
+
 def login(username, password):
     with open("users.json") as f:
         users = json.load(f)["users"]
     user = next((user for user in users if user["username"] == username), None)
     if not user:
-        return False, None
+        logger.warning(f"Login failed for {username}: user not found")
+        return False, False
     if not user["is_active"]:
+        logger.warning(f"Login failed for {username}: user is inactive")
         return False, None
 
     password_matches = bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8"))
-    if password_matches:
+    if user["username"] == username and password_matches:
+        logger.info(f"User {username} logged in successfully")
         return True, user
     else:
+        logger.warning(f"Login failed for {username}: incorrect password")
         return False, None
-
-def logout():
+def logout(current_user):
     st.session_state.clear()
     st.session_state['page'] = 'login'
+    logger.info(f"User {current_user} logged out")
     st.rerun()
 
 def display_project_list(current_user):
@@ -78,15 +86,19 @@ def handle_create_project(title, start_date, current_user):
     try:
         project = project_manager.create_project(title, start_date, current_user)
         st.success(f"New project created successfully with Title: {project['title']}")
+        logger.info(f"Project '{title}' created successfully by {current_user}")
+
         st.session_state['page'] = 'project_list'
         st.rerun()
     except Exception as e:
         st.error(f"Error creating project: {e}")
+        logger.error(f"Error creating project '{title}': {e}")
 
 def profile_settings(username):
     user = user_manager.get_user(username)
     if not user:
         st.error("User not found!")
+        logger.warning(f"Profile settings: user {username} not found")
         return
 
     st.header("Edit your profile")
@@ -110,15 +122,18 @@ def handle_update_profile(username, password, email):
     try:
         user_manager.update_user(username, updates)
         st.success("Profile updated successfully!")
+        logger.info(f"{field.capitalize()} updated successfully for {username}")
         st.rerun()
     except Exception as e:
         st.error(f"Error updating profile: {e}")
+        logger.error(f"Error updating {field} for {username}: {e}")        
 
 def display_project(project_title):
     project = project_manager.get_project(project_title)
 
     if not project:
         st.error(f"Project '{project_title}' not found!")
+        logger.warning(f"Project '{project_title}' not found")
         return
 
     st.header(f"Project: {project_title}")
@@ -235,9 +250,11 @@ def handle_move_task(project_title, task_title, new_status):
     try:
         task_manager.move_task(project_title, task_title, new_status)
         st.success(f"Task '{task_title}' moved to '{new_status}'")
+        logger.info(f"Task '{task_title}' moved to {new_status} in project '{project_title}' by {current_user}")
         st.rerun()
     except Exception as e:
         st.error(f"Error moving task: {e}")
+        logger.error(f"Error moving task '{task_title}' in project '{project_title}': {e}")
 
 def add_task(project_title):
     st.header("Add Task")
@@ -259,10 +276,12 @@ def handle_add_task(project_title, title, description, duration, priority, statu
     try:
         task_manager.add_task(project_title, title, description, duration, priority, status)
         st.success(f"Task '{title}' added successfully")
+        logger.info(f"Task '{task_title}' added to project '{project_title}' by {current_user}")
         st.session_state['page'] = 'project_detail'
         st.rerun()
     except Exception as e:
         st.error(f"Error adding task: {e}")
+        logger.error(f"Error adding task '{task_title}' to project '{project_title}': {e}")
 
 def edit_task(project_title):
     st.header("Edit Task")
@@ -292,10 +311,12 @@ def handle_edit_task(project_title, task_title, new_title, new_description, new_
         new_duration = (new_end_date - datetime.now().date()).days
         task_manager.edit_task(project_title, task_title, new_title, new_description, new_duration, new_priority)
         st.success(f"Task '{task_title}' updated successfully")
+        logger.info(f"Task '{task_title}' updated in project '{project_title}' by {current_user}")
         st.session_state['page'] = 'project_detail'
         st.rerun()
     except Exception as e:
         st.error(f"Error updating task: {e}")
+        logger.error(f"Error updating task '{task_title}' in project '{project_title}': {e}")
 
 def delete_task(project_title):
     st.header("Delete Task")
@@ -313,9 +334,11 @@ def handle_delete_task(project_title, task_title):
     try:
         task_manager.delete_task(project_title, task_title)
         st.success(f"Task '{task_title}' deleted successfully")
+        logger.info(f"Task '{task_title}' deleted from project '{project_title}' by {current_user}")
         st.rerun()
     except Exception as e:
         st.error(f"Error deleting task: {e}")
+        logger.error(f"Error deleting task '{task_title}' from project '{project_title}': {e}")
 
 def admin_panel():
     st.header("Admin Panel")
@@ -389,7 +412,7 @@ def register_dialog():
         if len(username) == 0:
             st.error("Username cannot be empty!")
             return
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
             st.error("Invalid email address!")
             return
         if len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
@@ -463,17 +486,21 @@ def handle_add_member(project_title, username, role):
     try:
         project_manager.add_member(project_title, username, role, project_manager)
         st.success(f"User '{username}' added to project '{project_title}' successfully")
+        logger.info(f"Member '{member_name}' added to project '{project_title}' with role '{role}' by {current_user}")
         st.rerun()
     except Exception as e:
         st.error(f"Error adding member to project: {e}")
+        logger.error(f"Error adding member '{member_name}' to project '{project_title}': {e}")
 
 def handle_remove_member(project_title, username):
     try:
         project_manager.remove_member_from_project(project_title, username)
         st.success(f"User '{username}' removed from project '{project_title}' successfully")
+        logger.info(f"Member '{member_name}' removed from project '{project_title}' by {current_user}")
         st.rerun()
     except Exception as e:
         st.error(f"Error removing member from project: {e}")
+        logger.error(f"Error removing member '{member_name}' from project '{project_title}': {e}")
 
 def manage_assignees(project_title):
     st.header("Manage Assignees and Comments")
@@ -600,7 +627,7 @@ def main_menu():
             st.session_state['page'] = 'admin_panel'
             st.rerun()
     if st.button("Log Out"):
-        logout()
+        logout(st.session_state['username'])
 
 def main():
     if 'page' not in st.session_state:
