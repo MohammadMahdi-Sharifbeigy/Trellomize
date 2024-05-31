@@ -21,18 +21,21 @@ Trellomize is a command-line project management tool inspired by Trello. It allo
     cd Trellomize
     ```
 
-2. Install the required dependencies:
+2. Create and Activate a Virtual Environment:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    ```
+3. Install Dependencies:
     ```bash
     pip install -r requirements.txt
     ```
+4. Run the application:
+    ```bash
+    python main.py
+    ```
 
 ## Usage
-
-To start the application, run the following command:
-```bash
-python main.py
-```
-
 ### Command-line Interface
 
 Once the application starts, you will be prompted with options to login, register, or exit. After logging in, you can navigate through the main menu to manage projects, tasks, and your profile.
@@ -86,6 +89,9 @@ Unit tests are included for `UserManager`, `ProjectManager`, and `TaskManager` c
 .
 ├── main.py                  # Main entry point of the application
 ├── manager.py               # Contains the UserManager, ProjectManager, and TaskManager classes
+├── data.json                # JSON file for storing project and task data
+├── users.json               # JSON file for storing user data
+├── app.log                  # Log file for logging
 ├── requirements.txt         # Project dependencies
 ├── README.md                # This README file
 ├── LICENSE                  # License information
@@ -117,3 +123,7 @@ Contributions are welcome! Please fork the repository and create a pull request 
 
 - [Mohammad Mahdi Sharifbeigy](https://github.com/MohammadMahdi-Sharifbeigy)
 - [Yousof Shahrabi](https://github.com/yousofs)
+
+---
+
+**Note:** Ensure that the `users.json` and `data.json` files are present in the project directory to store user and project data. If these files do not exist, they will be created automatically when the application is run.
