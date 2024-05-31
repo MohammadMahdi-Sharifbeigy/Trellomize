@@ -102,6 +102,9 @@ python manager.py --help
 .
 ├── main.py                  # Main entry point of the application (Streamlit GUI)
 ├── manager.py               # Contains the UserManager, ProjectManager, and TaskManager classes
+├── data.json                # JSON file for storing project and task data
+├── users.json               # JSON file for storing user data
+├── app.log                  # Log file for logging
 ├── requirements.txt         # Project dependencies
 ├── LICENSE                  # License information
 ├── .gitignore               # Git ignore file
