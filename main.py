@@ -406,9 +406,12 @@ def login_dialog():
 def register_dialog():
     st.header("Register")
     st.markdown("---")
+    
     username = st.text_input("Choose a username")
     password = st.text_input("Choose a password", type="password")
+    confirm_password = st.text_input("Confirm your password", type="password")
     email = st.text_input("Enter your email")
+    
     if st.button("Register"):
         if len(username) == 0:
             st.error("Username cannot be empty!")
@@ -419,19 +422,22 @@ def register_dialog():
         if len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
             st.error("Password must be at least 8 characters long and contain at least one letter and one number!")
             return
+        if password != confirm_password:
+            st.error("Passwords do not match!")
+            return
         if user_manager.get_user(username):
             st.error("Username already exists, please choose a different one.")
             return
         if user_manager.create_user(username=username, password=password, email=email):
             st.success("Registration successful!")
             st.session_state['page'] = 'login'
-            st.rerun()
+            st.experimental_rerun()
         else:
             st.error("Registration failed, please try again.")
     
     if st.button("Back to Login"):
         st.session_state['page'] = 'login'
-        st.rerun()
+        st.experimental_rerun()
 
 def manage_members(project_title):
     project = project_manager.get_project(project_title)
@@ -487,21 +493,21 @@ def handle_add_member(project_title, username, role):
     try:
         project_manager.add_member(project_title, username, role, project_manager)
         st.success(f"User '{username}' added to project '{project_title}' successfully")
-        logger.info(f"Member '{member_name}' added to project '{project_title}' with role '{role}' by {current_user}")
+        logger.info(f"Member '{username}' added to project '{project_title}' with role '{role}' by {current_user}")
         st.rerun()
     except Exception as e:
         st.error(f"Error adding member to project: {e}")
-        logger.error(f"Error adding member '{member_name}' to project '{project_title}': {e}")
+        logger.error(f"Error adding member '{username}' to project '{project_title}': {e}")
 
 def handle_remove_member(project_title, username):
     try:
         project_manager.remove_member_from_project(project_title, username)
         st.success(f"User '{username}' removed from project '{project_title}' successfully")
-        logger.info(f"Member '{member_name}' removed from project '{project_title}' by {current_user}")
+        logger.info(f"Member '{username}' removed from project '{project_title}' by {current_user}")
         st.rerun()
     except Exception as e:
         st.error(f"Error removing member from project: {e}")
-        logger.error(f"Error removing member '{member_name}' from project '{project_title}': {e}")
+        logger.error(f"Error removing member '{username}' from project '{project_title}': {e}")
 
 def manage_assignees(project_title):
     st.header("Manage Assignees and Comments")
@@ -510,11 +516,17 @@ def manage_assignees(project_title):
     project = project_manager.get_project(project_title)
     if not project:
         st.error(f"Project '{project_title}' not found!")
+        if st.button("Back to Project"):
+            st.session_state['page'] = 'project_detail'
+            st.rerun()
         return
 
     tasks_by_status = project.get("tasks", {})
     if not tasks_by_status:
         st.info("No tasks found in this project.")
+        if st.button("Back to Project"):
+            st.session_state['page'] = 'project_detail'
+            st.rerun()
         return
 
     all_tasks = []
@@ -524,6 +536,9 @@ def manage_assignees(project_title):
 
     if not all_tasks:
         st.info("No tasks available.")
+        if st.button("Back to Project"):
+            st.session_state['page'] = 'project_detail'
+            st.rerun()
         return
 
     selected_task_title = st.selectbox("Select Task", options=[task[0] for task in all_tasks])
