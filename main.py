@@ -604,6 +604,7 @@ def main():
 
                 if user_manager.create_user(username=username, password=password, email=email):
                     clear_screen()
+                    user = {"username": username}
                     console.print("Registration successful!", style="info")
                     logger.info(f"User {username} registered successfully")
                     break
