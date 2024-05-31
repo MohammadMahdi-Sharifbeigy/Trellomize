@@ -14,6 +14,7 @@ from manager import ProjectManager, TaskManager, UserManager
 user_manager = UserManager()
 project_manager = ProjectManager()
 task_manager = TaskManager()
+current_user = None
 
 logger.remove()
 logger.add("app.log", rotation="1 MB", level="DEBUG", format="{time} {level} {message}")
@@ -276,12 +277,12 @@ def handle_add_task(project_title, title, description, duration, priority, statu
     try:
         task_manager.add_task(project_title, title, description, duration, priority, status)
         st.success(f"Task '{title}' added successfully")
-        logger.info(f"Task '{task_title}' added to project '{project_title}' by {current_user}")
+        logger.info(f"Task '{title}' added to project '{project_title}' by {current_user}")
         st.session_state['page'] = 'project_detail'
         st.rerun()
     except Exception as e:
         st.error(f"Error adding task: {e}")
-        logger.error(f"Error adding task '{task_title}' to project '{project_title}': {e}")
+        logger.error(f"Error adding task '{title}' to project '{project_title}': {e}")
 
 def edit_task(project_title):
     st.header("Edit Task")
