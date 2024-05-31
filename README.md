@@ -66,22 +66,10 @@ python manager.py --help
 
 ## Running Tests
 
-Unit tests are included for `UserManager`, `ProjectManager`, and `TaskManager` classes. To run the tests, use the following commands:
-
-- For `UserManager` tests:
-    ```bash
-    python -m unittest discover -s tests -p 'test_user_manager.py'
-    ```
-
-- For `ProjectManager` tests:
-    ```bash
-    python -m unittest discover -s tests -p 'test_project_manager.py'
-    ```
-
-- For `TaskManager` tests:
-    ```bash
-    python -m unittest discover -s tests -p 'test_task_manager.py'
-    ```
+To run the tests, execute the following command:
+```bash
+python -m unittest test_manager.py
+```
 
 ## File Structure
 
