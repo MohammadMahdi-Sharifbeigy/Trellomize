@@ -96,11 +96,7 @@ Unit tests are included for `UserManager`, `ProjectManager`, and `TaskManager` c
 ├── README.md                # This README file
 ├── LICENSE                  # License information
 ├── .gitignore               # Git ignore file
-└── tests                    # Directory containing test files
-    ├── test.py
-    ├── test_user_manager.py
-    ├── test_project_manager.py
-    └── test_task_manager.py
+└── test.py                  # Test file for manager.py
 ```
 
 ## Dependencies
