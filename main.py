@@ -141,6 +141,7 @@ def display_project(project_title):
     st.markdown("---")
     
     status_columns = {
+        "BACKLOG" : [],
         "TODO": [],
         "DOING": [],
         "DONE": [],
@@ -213,7 +214,7 @@ def display_project(project_title):
                     st.write(f"**Due Date:** {task_info['end_date']}")
                     st.write(f"**Description:** {task_info['description']}")
 
-                    new_status = st.selectbox(f"Move {task_info['title']} to", options=["TODO", "DOING", "DONE", "ARCHIVED"], index=["TODO", "DOING", "DONE", "ARCHIVED"].index(task_info['status']), key=f"move_{task_info['title']}")
+                    new_status = st.selectbox(f"Move {task_info['title']} to", options=["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"], index=["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"].index(task_info['status']), key=f"move_{task_info['title']}")
                     if new_status != task_info['status']:
                         handle_move_task(project_title, task_info['title'], new_status)
                         
@@ -264,7 +265,7 @@ def add_task(project_title):
     description = st.text_input("Task Description")
     duration = st.number_input("Task Duration (days)", min_value=1)
     priority = st.selectbox("Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"])
-    status = st.selectbox("Status", ["TODO", "DOING", "DONE", "ARCHIVED"])
+    status = st.selectbox("Status", ["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"], index = 1)
     if st.button("Add"):
         handle_add_task(project_title, title, description, duration, priority, status)
 

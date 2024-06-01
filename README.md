@@ -64,7 +64,7 @@ Trellomize is a project management tool inspired by Trello. This branch uses Str
 - **View Project Details:** See detailed information about a project, including tasks.
 - **Add Task:** Add a new task to the project with details like title, description, duration, priority, and status.
 - **Edit Task:** Update task details.
-- **Move Task:** Change the status of a task (TODO, DOING, DONE, ARCHIVED).
+- **Move Task:** Change the status of a task (BACKLOG,TODO, DOING, DONE, ARCHIVED).
 - **Delete Task:** Remove a task from the project.
 - **Manage Members:** Add or remove members from the project.
 - **Manage Assignees and Comments:** Assign members to tasks and manage task comments.

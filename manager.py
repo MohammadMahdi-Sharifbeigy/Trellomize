@@ -57,12 +57,12 @@ task_parser.add_argument("--task_title", required=True, help="Task Title")
 task_parser.add_argument("--description", help="Description (Optional)")
 task_parser.add_argument("--duration", default=1, type=int, help="Duration in days (Optional)")
 task_parser.add_argument("--priority", choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"], default="MEDIUM", help="Task priority (Optional)")
-task_parser.add_argument("--status", choices=["TODO", "DOING", "DONE", "ARCHIVED"], default="TODO", help="Task status (Optional)")
+task_parser.add_argument("--status", choices=["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"], default="TODO", help="Task status (Optional)")
 
 task_parser = subparsers.add_parser("move-task", help="Move a task to a different status")
 task_parser.add_argument("--project_title", required=True, help="Project Title")
 task_parser.add_argument("--task_title", required=True, help="Task Title")
-task_parser.add_argument("--new_status", required=True, choices=["TODO", "DOING", "DONE", "ARCHIVED"], help="New task status")
+task_parser.add_argument("--new_status", required=True, choices=["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"], help="New task status")
 
 task_parser = subparsers.add_parser("delete-task", help="Delete a task")
 task_parser.add_argument("--project_title", required=True, help="Project Title")
@@ -242,7 +242,7 @@ class ProjectManager(DataManager):
             "start_date": datetime.strptime(start_date, "%d/%m/%Y").strftime("%Y-%m-%d"),
             "owner": owner,
             "members": [{owner: "owner"}],
-            "tasks": {"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []},
+            "tasks": {"BACKLOG": [],"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []},
         }
         self.data.setdefault("projects", []).append(project)
         self._save_data(self.data, self.data_filename)
@@ -380,7 +380,7 @@ class TaskManager(DataManager):
         }
 
         if "tasks" not in project or not isinstance(project["tasks"], dict):
-            project["tasks"] = {"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []}
+            project["tasks"] = {"BACKLOG" : [],"TODO": [], "DOING": [], "DONE": [], "ARCHIVED": []}
 
         project["tasks"][status].append(task)
         self._save_data(self.data, self.data_filename)
