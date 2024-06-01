@@ -160,7 +160,7 @@ def display_project(project_title, project_manager, task_manager, current_user):
                 else:
                     # Create a table for each task status
                     task_tables = {}
-                    for status in ["TODO", "DOING", "DONE", "ARCHIVED"]:
+                    for status in ["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"]:
                         task_table = Table(title=status.upper(), style="bold magenta")
                         task_table.add_column("Title", style="italic")
                         task_table.add_column("Assignee", justify="right")
@@ -176,7 +176,7 @@ def display_project(project_title, project_manager, task_manager, current_user):
                             task_tables[status].add_row(task["title"], assignees, task["priority"], due_date)
 
                     # Create a list of the tables to display side by side
-                    tables = [task_tables[status] for status in ["TODO", "DOING", "DONE", "ARCHIVED"]]
+                    tables = [task_tables[status] for status in ["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"]]
 
                     # Print the task tables side by side
                     console.print(Columns(tables))
@@ -273,7 +273,7 @@ def display_project(project_title, project_manager, task_manager, current_user):
                     task_title = Prompt.ask("Enter task title to move, or press enter to go back")
                     if task_title == "":
                         continue
-                    new_status = Prompt.ask("Enter new status (TODO, DOING, DONE, ARCHIVED)", choices=["TODO", "DOING", "DONE", "ARCHIVED"])
+                    new_status = Prompt.ask("Enter new status (BACKLOG,TODO, DOING, DONE, ARCHIVED)", choices=["BACKLOG","TODO", "DOING", "DONE", "ARCHIVED"])
                     task_manager.move_task(project_title, task_title, new_status)
                     console.print(f"Task '{task_title}' moved to {new_status} successfully!", style="success")
                     logger.info(f"Task '{task_title}' moved to {new_status} in project '{project_title}' by {current_user}")
