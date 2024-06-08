@@ -83,7 +83,7 @@ $(document).ready(function() {
             url: "/login",
             data: $(this).serialize(),
             success: function(response) {
-                window.location.href = "/projects";
+                window.location.href = "/main_menu";
             },
             error: function(response) {
                 $("#login-error").show();
@@ -98,7 +98,7 @@ $(document).ready(function() {
             url: "/signup",
             data: $(this).serialize(),
             success: function(response) {
-                window.location.href = "/projects";
+                window.location.href = "/main_menu";
             },
             error: function(response) {
                 $("#signup-error").show();

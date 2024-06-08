@@ -22,7 +22,7 @@ def create_json_files():
 
 create_json_files()
 
-def login_user(username, password):  # Rename the function to avoid conflict
+def login_user(username, password):
     with open("users.json") as f:
         users = json.load(f)["users"]
     user = next((user for user in users if user["username"] == username), None)
@@ -84,9 +84,6 @@ def profile_settings(username):
 
         console.print(f"{field} updated successfully!", style="success")
 
-# def add_task_to_board(project_title, task_title, description, duration, priority, status):
-#     task_manager.add_task(project_title, task_title, description, duration, priority, status)
-
 def move_task_on_board(project_title, task_title, new_status):
     try:
         task_manager.move_task(project_title, task_title, new_status)
@@ -130,14 +127,9 @@ def send_password_reset_email(email, token):
     print("Note: This is a simulated email sending process for demonstration purposes only.")
 
 
-# Routes
 @app.route('/')
 def index():
     return render_template('login_register.html')
-
-@app.route('/')
-def home():
-    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -145,7 +137,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         if login_user(username, password): 
-            return redirect(url_for('projects'))
+            return redirect(url_for('main_menu'))
         else:
             return render_template('login_register.html', error='Invalid username or password')
     else:
@@ -207,15 +199,12 @@ def sign_up():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-        # Check if username already exists
         with open("users.json", "r") as f:
             users_data = json.load(f)
             usernames = [user['username'] for user in users_data['users']]
             if username in usernames:
                 return render_template('login_register.html', error="Username already exists")
-        # Hash password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        # Save user data
         with open("users.json", "w") as f:
             user = {"username": username, "password": hashed_password, "email": email, "is_active": True, "is_admin": False}
             users_data['users'].append(user)
@@ -236,7 +225,6 @@ def main_menu():
         "1": "Project List",
         "2": "Create New Project",
         "3": "Profile Settings",
-        "4": "Board",
         "0": "Log Out",
     }
     if is_admin:
@@ -247,7 +235,6 @@ def main_menu():
 @app.route('/projects')
 def projects():
     if is_logged_in():
-        # Fetch projects from data.json
         with open("data.json", "r") as f:
             projects_data = json.load(f)["projects"]
         username = get_current_user()
@@ -260,9 +247,8 @@ def projects():
 def profile():
     if is_logged_in():
         username = get_current_user()
-        user = user_manager.get_user(username)  # Fetch user info using the username
+        user = user_manager.get_user(username)
         if not user:
-            # Handle case where user info is not found
             return "User not found", 404
         return render_template('profile.html', user=user)
     else:
@@ -304,23 +290,20 @@ def edit_email():
 @app.route('/projects')
 def list_projects():
     if is_logged_in():
-        # Fetch projects from ProjectManager
         projects = project_manager.list_projects()
         return render_template('projects_list.html', projects=projects)
     else:
         return redirect(url_for('login'))
     
-# Route to create a new project
-@app.route('/projects/create', methods=['GET', 'POST'])
+@app.route('/create', methods=['GET', 'POST'])
 def create_project_route():
     if is_logged_in():
         if request.method == 'POST':
             title = request.form['title']
             start_date = request.form['start_date']
-            # You can add validation and error handling here
             try:
-                project_manager.create_project(title, start_date, get_current_user())
-                return redirect(url_for('projects'))
+                create_new_project( get_current_user(),title, start_date)
+                return redirect(url_for('/main_menu'))
             except Exception as e:
                 return render_template('error.html', error=str(e))
         else:
@@ -400,7 +383,6 @@ def manage_tasks(project_title):
                 elif 'task_title_comment' in request.form:
                     task_title_comment = request.form['task_title_comment']
                     comment_text = request.form['comment_text']
-                    # Assuming you have a function to add comments
                     task_manager.add_comment_to_task(project_title, task_title_comment, comment_text)
                     flash('Comment added successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
@@ -408,7 +390,6 @@ def manage_tasks(project_title):
                 elif 'task_title_remove_comment' in request.form:
                     task_title_remove_comment = request.form['task_title_remove_comment']
                     comment_text_remove = request.form['comment_text_remove']
-                    # Assuming you have a function to remove comments
                     task_manager.remove_comment_from_task(project_title, task_title_remove_comment, comment_text_remove)
                     flash('Comment removed successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
