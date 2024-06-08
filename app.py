@@ -135,6 +135,10 @@ def send_password_reset_email(email, token):
 def index():
     return render_template('login_register.html')
 
+@app.route('/')
+def home():
+    return redirect(url_for('login'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -221,6 +225,25 @@ def sign_up():
     else:
         return render_template('login_register.html')
 
+
+@app.route('/main_menu')
+def main_menu():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    is_admin = session.get('is_admin', False)
+    menu_options = {
+        "1": "Project List",
+        "2": "Create New Project",
+        "3": "Profile Settings",
+        "4": "Board",
+        "0": "Log Out",
+    }
+    if is_admin:
+        menu_options["5"] = "Admin Settings"
+    
+    return render_template('main_menu.html', menu_options=menu_options)
+
 @app.route('/projects')
 def projects():
     if is_logged_in():
@@ -304,6 +327,14 @@ def create_project_route():
             return render_template('create_project.html')
     else:
         return redirect(url_for('login'))
+    
+@app.route('/view_members/<project_title>')
+def view_members(project_title):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    members = project_manager.get_members(project_title)
+    return render_template('view_members.html', project_title=project_title, members=members)
 
 @app.route('/projects/<project_title>', methods=['GET', 'POST'])
 def manage_tasks(project_title):
@@ -322,27 +353,27 @@ def manage_tasks(project_title):
                     duration = int(request.form['duration'])
                     priority = request.form['priority']
                     status = request.form['status']
-                    task_manager.add_task(project_title, task_title, description, duration, priority, status)
-                    flash('Task added successfully', 'success')
+                    task_manager.create_task(project_title, task_title, description, duration, priority, status)
+                    flash('Task created successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
                 
                 elif 'task_title_move' in request.form:
                     task_title_move = request.form['task_title_move']
                     new_status = request.form['new_status']
-                    move_task_on_board(project_title, task_title_move, new_status)
+                    task_manager.move_task(project_title, task_title_move, new_status)
                     flash('Task moved successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
                 
                 elif 'task_title_delete' in request.form:
                     task_title_delete = request.form['task_title_delete']
-                    delete_task_from_board(project_title, task_title_delete)
+                    task_manager.delete_task(project_title, task_title_delete)
                     flash('Task deleted successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
                 
-                elif 'add_member' in request.form:
+                elif 'member_username' in request.form:
                     member_username = request.form['member_username']
-                    member_role = request.form['memeber_role']
-                    project_manager.add_member(project_title, member_username, member_role)
+                    member_role = request.form['member_role']
+                    project_manager.add_member_to_project(project_title, member_username, member_role)
                     flash('Member added successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
                 
@@ -352,31 +383,85 @@ def manage_tasks(project_title):
                     flash('Member removed successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
                 
-                elif 'task_title_assignee' in request.form:
-                    task_title_assignee = request.form['task_title_assignee']
+                elif 'assign_task_title' in request.form:
+                    assign_task_title = request.form['assign_task_title']
                     assignee_username = request.form['assignee_username']
-                    task_manager.assign_member(project_title, task_title_assignee, assignee_username)
+                    task_manager.assign_task_to_member(project_title, assign_task_title, assignee_username)
                     flash('Member assigned to task successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
                 
-                elif 'task_title_remove_assignee' in request.form:
-                    task_title_remove_assignee = request.form['task_title_remove_assignee']
-                    assignee_username_remove = request.form['assignee_username_remove']
-                    task_manager.remove_assignee_from_task(project_title, task_title_remove_assignee, assignee_username_remove)
+                elif 'remove_assign_task_title' in request.form:
+                    remove_assign_task_title = request.form['remove_assign_task_title']
+                    remove_assignee_username = request.form['remove_assignee_username']
+                    task_manager.remove_assignee_from_task(project_title, remove_assign_task_title, remove_assignee_username)
                     flash('Assignee removed from task successfully', 'success')
                     return redirect(url_for('manage_tasks', project_title=project_title))
                 
+                elif 'task_title_comment' in request.form:
+                    task_title_comment = request.form['task_title_comment']
+                    comment_text = request.form['comment_text']
+                    # Assuming you have a function to add comments
+                    task_manager.add_comment_to_task(project_title, task_title_comment, comment_text)
+                    flash('Comment added successfully', 'success')
+                    return redirect(url_for('manage_tasks', project_title=project_title))
+
+                elif 'task_title_remove_comment' in request.form:
+                    task_title_remove_comment = request.form['task_title_remove_comment']
+                    comment_text_remove = request.form['comment_text_remove']
+                    # Assuming you have a function to remove comments
+                    task_manager.remove_comment_from_task(project_title, task_title_remove_comment, comment_text_remove)
+                    flash('Comment removed successfully', 'success')
+                    return redirect(url_for('manage_tasks', project_title=project_title))
+
                 elif 'view_members' in request.form:
-                    members = project_manager.get_members(project_title)
-                    return render_template('view_members.html', project_title=project_title, members=members)
+                    return view_members(project_title)
             
             except Exception as e:
-                flash(f'Error: {str(e)}', 'danger')
-                return redirect(url_for('manage_tasks', project_title=project_title))
-
+                flash(f'An error occurred: {e}', 'danger')
+        
         return render_template('manage_tasks.html', project_title=project_title, tasks=tasks)
     else:
         return redirect(url_for('login'))
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if 'username' not in session or not session.get('is_admin'):
+        return redirect(url_for('login'))
+    
+    users = []
+    projects = []
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'add_user':
+            username = request.form['username']
+            password = request.form['password']
+            role = request.form['role']
+            try:
+                user_manager.register(username, password, role)
+                flash(f'User {username} added successfully')
+            except Exception as e:
+                flash(f'Error adding user: {e}')
+        elif action == 'edit_user':
+            username = request.form['username']
+            new_role = request.form['role']
+            try:
+                user_manager.update_user_role(username, new_role)
+                flash(f'User {username} role updated to {new_role}')
+            except Exception as e:
+                flash(f'Error updating user: {e}')
+        elif action == 'delete_user':
+            username = request.form['username']
+            try:
+                user_manager.delete_user(username)
+                flash(f'User {username} deleted successfully')
+            except Exception as e:
+                flash(f'Error deleting user: {e}')
+
+    users = user_manager.get_all_users()
+    projects = project_manager.get_all_projects()
+    return render_template('admin.html', users=users, projects=projects)
+
 if __name__ == '__main__':
     user_manager = UserManager()
     project_manager = ProjectManager()

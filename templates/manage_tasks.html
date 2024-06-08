@@ -134,7 +134,27 @@
         </div>
         {% endfor %}
       </div>
-
+      <div class="task-list">
+        <h3>Backlog</h3>
+        {% for task in tasks.BACKLOG %}
+        <div class="task-card">
+          <div class="task-header">
+            <div class="task-title">{{ task.title }}</div>
+            <div class="task-priority">{{ task.priority }}</div>
+          </div>
+          <div class="task-details">
+            <div class="task-description">{{ task.description }}</div>
+            <div cladd="task-start">{{task.start_date}}</div>
+            <div cladd="task-end">{{task.end_date}}</div>
+            <div class="task-assignees">
+              {% for assignee in task.assignees %}
+              <span class="assignee">{{ assignee }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
       <h2>Move Task</h2>
       <form method="post">
         <label for="task_title_move">Task Title:</label>
@@ -147,6 +167,7 @@
         <br />
         <label for="new_status">New Status:</label>
         <select id="new_status" name="new_status" required>
+          <option value="BACKLOG">Backlog</option>
           <option value="TODO">To Do</option>
           <option value="DOING">Doing</option>
           <option value="DONE">Done</option>

@@ -11,13 +11,44 @@
       integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMt23cez/3paNdF+N8FkVSm7K4U5xFe5R6oRfrv"
       crossorigin="anonymous"
     />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .project-title {
+        color: #333;
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+      .members-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .members-list li {
+        background-color: #f2f2f2;
+        border: 1px solid #ddd;
+        margin-bottom: 5px;
+        padding: 10px;
+        font-size: 18px;
+      }
+      .members-list li strong {
+        color: #5b9bd5;
+      }
+      .members-list li:not(:last-child) {
+        border-bottom: none;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
-      <h1>Members of Project: {{ project_title }}</h1>
-      <ul>
+      <h1 class="project-title">Members of Project: {{ project_title }}</h1>
+      <ul class="members-list">
         {% for member in members %}
-        <li>{{ member }}</li>
+        <li>
+          <strong>{{ member.keys()|first }}:</strong> {{ member.values()|first
+          }}
+        </li>
         {% endfor %}
       </ul>
 

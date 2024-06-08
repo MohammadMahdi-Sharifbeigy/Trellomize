@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Main Menu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .nav {
+            width: 200px;
+            background: #333;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .nav ul li {
+            margin-bottom: 20px;
+        }
+        .nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .nav ul li a:hover {
+            text-decoration: underline;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <h1>Main Menu</h1>
+        <ul>
+            <li><a href="#" onclick="loadContent('projects')">Project List</a></li>
+            <li><a href="#" onclick="loadContent('create_project')">Create New Project</a></li>
+            <li><a href="#" onclick="loadContent('profile')">Profile Settings</a></li>
+            {% if is_admin %}
+            <li><a href="#" onclick="loadContent('admin')">Admin Settings</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout_route') }}">Log Out</a></li>
+        </ul>
+    </div>
+    <div class="content" id="content">
+        <!-- Dynamic content will be loaded here -->
+    </div>
+
+    <script>
+        async function loadContent(section) {
+            // Fetch the content for the selected section
+            const response = await fetch(`/${section}`);
+            const content = await response.text();
+
+            // Load the content into the content area
+            document.getElementById('content').innerHTML = content;
+
+            // Reinitialize the dark mode widget after loading new content
+            const darkmode = new Darkmode();
+            darkmode.showWidget();
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
+    <script>
+        function addDarkmodeWidget() {
+          new Darkmode().showWidget();
+        }
+        window.addEventListener('load', addDarkmodeWidget);
+        const options = {
+          bottom: '64px', 
+          right: 'unset', 
+          left: '32px', 
+          time: '0.5s', 
+          mixColor: '#fff', 
+          backgroundColor: '#fff', 
+          buttonColorDark: '#100f2c',  
+          buttonColorLight: '#fff', 
+          saveInCookies: true, 
+          label: '🌓',
+          autoMatchOsTheme: true
+        }
+    
+        const darkmode = new Darkmode(options);
+        darkmode.showWidget();
+      </script>
+</body>
+</html>
